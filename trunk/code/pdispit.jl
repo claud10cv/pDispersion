@@ -4,11 +4,19 @@ using Dates
 
 function pdispersion_binary_search(p)
     init_solver_status()
-    E = build_full_matrix()
-    ub = maximum(E)
-    lb, ub, opt = binarysearch(E, p, ub)
-    solver_status.endTime = Dates.now()
-    lb, ub, opt
+    memEGB = 1e-9 * (sizeof(Int64) * data.nnodes * data.nnodes)
+    if memGB <= 8
+        E = build_full_matrix()
+        ub = maximum(E)
+        lb, ub, opt = binarysearch(E, p, ub)
+        solver_status.endTime = Dates.now()
+        solver_status.endStatus = solver_status.ok ? :optimal : :tilim
+        return lb, ub, opt
+    else
+        solver_status.ok = false
+        solver_status.endStatus = :memlim
+        return 0, 0, []
+    end
 end
 
 function pdispersion_decremental_clustering(p)
@@ -45,6 +53,7 @@ function pdispersion_decremental_clustering(p)
     end
     solver_status.endTime = Dates.now()
     opt = [groups[u][1] for u in opt]
+    solver_status.endStatus = solver_stats.ok ? :optimal : :tilim
     ub, opt
 end
 
