@@ -20,7 +20,7 @@ function build_full_matrix()
 end
 
 function maximum_weighted_clique_exact(nnodes, adj, weights)
-    m = Model(solver = GurobiSolver(OutputFlag = 0))
+    m = Model(solver = GurobiSolver(OutputFlag = 0, Threads = 1))
     @variable(m, x[1 : nnodes], Bin)
     for i in 1 : nnodes, j in i + 1 : nnodes
         if adj[i, j]
