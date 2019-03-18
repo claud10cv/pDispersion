@@ -1,6 +1,7 @@
 using Distances
 using Gurobi
 using JuMP
+using Dates
 
 function distance(u, v)
     if params.wtype == :ceil
@@ -8,6 +9,14 @@ function distance(u, v)
     else
         round(Int64, euclidean(data.D[:, u], data.D[:, v]))
     end
+end
+
+function build_full_matrix()
+    E = zeros(Int64, data.nnodes, data.nnodes)
+    for i in 1 : data.nnodes - 1, j in i + 1 : data.nnodes
+        E[i, j] = E[j, i] = distance(i, j)
+    end
+    E
 end
 
 function maximum_weighted_clique_exact(nnodes, adj, weights)
@@ -133,4 +142,29 @@ function compute_easy_solution(E, p, oldopt)
         end
         return newopt, val
     end
+end
+
+function set_maximum_time(s)
+    params.max_time = s
+end
+
+function elapsed()
+    b = Dates.now()
+    ms = Dates.value(b - solver_status.initTime)
+    s = ms / 1000
+end
+
+function total_elapsed()
+    ms = Dates.value(solver_status.endTime - solver_status.initTime)
+    s = ms / 1000
+end
+
+function init_solver_status()
+    solver_status.initTime = Dates.now()
+    solver_status.endTime = Dates.now()
+    solver_status.ok = true
+end
+
+function optimal()
+    return solver_status.ok
 end

@@ -5,7 +5,6 @@ using Distances
 using MathProgBase
 
 function pdisp(D, p, lb, ub)
-    # println(D)
     nnodes = size(D, 1)
     dmax = maximum(D)
     Dlist = [[] for i in 1 : dmax + 1]
@@ -29,7 +28,10 @@ function pdisp(D, p, lb, ub)
         end
     end
     nunfeas = length(unfeas)
-    m = Model(solver = GurobiSolver(OutputFlag = 0))
+    maxtime = max(1, params.max_time - elapsed())
+    m = Model(solver = GurobiSolver(OutputFlag = 0,
+                                    Threads = 1,
+                                    TimeLimit = 1.01 * maxtime))
     @variable(m, x[1 : nnodes], Bin)
     @variable(m, z[2 : ndists], Bin)
     @objective(m, Max, sum((dmap[k] - dmap[k - 1]) * z[k] for k in 2 : ndists))
@@ -68,17 +70,16 @@ function pdisp(D, p, lb, ub)
     end
     addlazycallback(m, lazycb; fractional = true)
     status = solve(m)
-    if status == :Infeasible
-        return [], 0
-    else
+    if status == :Optimal
         xvals = round.(Int64, getvalue(x))
         optval = round(Int64, dmap[1] + getobjectivevalue(m))
         sol = [i for i in 1 : nnodes if xvals[i] > 0]
         return sol, optval
+    else return [], 0
     end
 end
 
-function pdisp_binarysearch(D, p, ub)
+function binarysearch(D, p, ub)
     newlb = ub
     newub = ub
     mult = 2
@@ -90,10 +91,13 @@ function pdisp_binarysearch(D, p, ub)
             sol = newsol
             optval = newoptval
             break
-        else
+        elseif elapsed() < params.max_time
             newub = newlb - 1
             newlb = max(1, newlb - mult)
             mult *= 2
+        else
+            solver_status.ok = false
+            return 0, newub, sol
         end
     end
     println("finished powsearch with lb = $newlb and ub = $newub")
@@ -103,10 +107,13 @@ function pdisp_binarysearch(D, p, ub)
         if !isempty(newsol)
             newlb = optval = newval
             sol = newsol
-        else
+        elseif elapsed() < params.max_time
             newub = r - 1
+        else
+            solver_status.ok = false
+            return newlb, newub, sol
         end
     end
     println("finished binsearch with lb = $newlb and ub = $newub")
-    sol, optval
+    optval, optval, sol
 end

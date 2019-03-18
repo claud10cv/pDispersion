@@ -1,4 +1,4 @@
-function readinstance_tsplib(filename)
+function read_instance_tsplib(filename)
     start_coords = false
     open(filename) do f
         lines = readlines(f)

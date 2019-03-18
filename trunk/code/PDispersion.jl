@@ -4,5 +4,9 @@ module PDispersion
     include("pdisp.jl")
     include("pdispit.jl")
     include("filereader.jl")
-    export pdisp_iterative
+    export pdispersion_decremental_clustering
+    export pdispersion_binary_search
+    export read_instance_tsplib
+    export total_elapsed
+    export optimal
 end

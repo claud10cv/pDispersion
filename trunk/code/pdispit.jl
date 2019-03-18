@@ -1,12 +1,23 @@
 using Clustering
 using Distances
+using Dates
 
-function pdisp_iterative(p)
-    lowerBound = compute_lower_bound(p)
-    println("lower bound = $lowerBound")
+function pdispersion_binary_search(p)
+    init_solver_status()
+    E = build_full_matrix()
+    ub = maximum(E)
+    lb, ub, opt = binarysearch(E, p, ub)
+    solver_status.endTime = Dates.now()
+    lb, ub, opt
+end
+
+function pdispersion_decremental_clustering(p)
+    init_solver_status()
+    lb = compute_lower_bound(p)
+    println("lower bound = $lb")
     dim, nnodes = size(data.D)
     E, groups = build_initial_groups(p)
-    while maximum([E[i, i] for i in eachindex(groups)]) >= lowerBound
+    while maximum([E[i, i] for i in eachindex(groups)]) >= lb
         groups, E = split_groups_and_build_matrix(groups, E; use_diagonal = true)
     end
     ub = maximum(E)
@@ -17,12 +28,14 @@ function pdisp_iterative(p)
             opt, val = compute_easy_solution(E, p, opt)
         end
         if val < ub
-            opt, val = pdisp_binarysearch(E, p, ub)
-            ub = val
+            lb, ub, opt = binarysearch(E, p, ub)
         else
             println("found a solution by simple inspection!")
         end
         println("solution with $(length(groups)) groups of value $val")
+        if !solver_status.ok
+            break
+        end
         maxsize = maximum([E[g, g] for g in opt])
         if maxsize > 0
             groups, E = split_groups_and_build_matrix(groups, E; restrict_to = opt)
@@ -30,7 +43,8 @@ function pdisp_iterative(p)
             break
         end
     end
-    println("optimal sol found of value $ub")
+    solver_status.endTime = Dates.now()
+    ub, opt
 end
 
 function split_groups_and_build_matrix(groups, E; restrict_to = [], use_diagonal = false)
