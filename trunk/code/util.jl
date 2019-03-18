@@ -163,8 +163,13 @@ function init_solver_status()
     solver_status.initTime = Dates.now()
     solver_status.endTime = Dates.now()
     solver_status.ok = true
+    solver_status.endStatus = :none
 end
 
 function optimal()
-    return solver_status.ok
+    return solver_status.endStatus == :optimal
+end
+
+function getStatus()
+    return solver_status.endStatus
 end
