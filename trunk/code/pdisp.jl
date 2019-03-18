@@ -100,7 +100,7 @@ function binarysearch(D, p, ub)
             return 0, newub, sol
         end
     end
-    println("finished powsearch with lb = $newlb and ub = $newub")
+    # println("finished powsearch with lb = $newlb and ub = $newub")
     while newlb < newub
         r = ceil(Int64, ( newlb + newub ) / 2)
         newsol, newval = pdisp(D, p, r, newub)
@@ -114,6 +114,6 @@ function binarysearch(D, p, ub)
             return newlb, newub, sol
         end
     end
-    println("finished binsearch with lb = $newlb and ub = $newub")
+    # println("finished binsearch with lb = $newlb and ub = $newub")
     optval, optval, sol
 end
