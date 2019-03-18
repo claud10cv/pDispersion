@@ -44,6 +44,7 @@ function pdispersion_decremental_clustering(p)
         end
     end
     solver_status.endTime = Dates.now()
+    opt = [groups[u][1] for u in opt]
     ub, opt
 end
 
