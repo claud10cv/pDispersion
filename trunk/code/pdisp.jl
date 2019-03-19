@@ -31,7 +31,8 @@ function pdisp(D, p, lb, ub)
     maxtime = max(1, params.max_time - elapsed())
     m = Model(solver = GurobiSolver(OutputFlag = 0,
                                     Threads = 1,
-                                    TimeLimit = 1.01 * maxtime))
+                                    MIPFocus = 1,
+                                    TimeLimit = maxtime + 1))
     @variable(m, x[1 : nnodes], Bin)
     @variable(m, z[2 : ndists], Bin)
     @objective(m, Max, sum((dmap[k] - dmap[k - 1]) * z[k] for k in 2 : ndists))
@@ -42,7 +43,7 @@ function pdisp(D, p, lb, ub)
 
     function lazycb(cb)
         cbnodes = MathProgBase.cbgetexplorednodes(cb)
-        if cbnodes >= 1 return
+        if cbnodes >= 100 return
         end
         xvals = getvalue(x)
         zvals = getvalue(z)
@@ -68,12 +69,22 @@ function pdisp(D, p, lb, ub)
             end
         end
     end
-    addlazycallback(m, lazycb; fractional = true)
-    status = solve(m)
-    if status == :Optimal
+
+    feas = []
+    function infocb(cb)
         xvals = round.(Int64, getvalue(x))
-        optval = round(Int64, dmap[1] + getobjectivevalue(m))
         sol = [i for i in 1 : nnodes if xvals[i] > 0]
+        push!(feas, sol)
+        throw(CallbackAbort())
+    end
+
+    addlazycallback(m, lazycb; fractional = true)
+    addinfocallback(m, infocb, when = :MIPSol)
+
+    status = solve(m)
+    if !isempty(feas)
+        sol = feas[1]
+        optval = minimum([D[i, j] for i in sol, j in sol if j > i])
         return sol, optval
     else return [], 0
     end
@@ -83,11 +94,13 @@ function binarysearch(D, p, ub; with_lb = 1)
     newlb = ub
     newub = ub
     mult = 2
-    sol, optval = [], -1
+    sol = []
     while true
         newsol, newoptval = pdisp(D, p, newlb, newub)
         if !isempty(newsol) #problem feasible
-            return newoptval, newoptval, newsol
+            newlb = newoptval
+            sol = newsol
+            break
         elseif elapsed() < params.max_time
             newub = newlb - 1
             newlb = max(with_lb, newlb - mult)
@@ -97,4 +110,18 @@ function binarysearch(D, p, ub; with_lb = 1)
             return 0, newub, sol
         end
     end
+    while newlb < newub
+        r = ceil(Int64, (newlb + newub) / 2)
+        newsol, newoptval = pdisp(D, p, r, newub)
+        if !isempty(newsol) #problem feasible
+            newlb = newoptval
+            sol = newsol
+        elseif elapsed() < params.max_time
+            newub = r - 1
+        else
+            solver_status.ok = false
+            return 0, newub, sol
+        end
+    end
+    return newlb, newub, sol
 end
