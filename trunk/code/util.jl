@@ -164,12 +164,17 @@ function init_solver_status()
     solver_status.endTime = Dates.now()
     solver_status.ok = true
     solver_status.endStatus = :none
+    solver_status.endGroupsNb = 0
 end
 
 function optimal()
     return solver_status.endStatus == :optimal
 end
 
-function getStatus()
+function get_status()
     return solver_status.endStatus
+end
+
+function get_number_groups()
+	return solver_status.endGroupsNb
 end

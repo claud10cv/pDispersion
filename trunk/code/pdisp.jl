@@ -79,7 +79,7 @@ function pdisp(D, p, lb, ub)
     end
 end
 
-function binarysearch(D, p, ub)
+function binarysearch(D, p, ub; with_lb = 1)
     newlb = ub
     newub = ub
     mult = 2
@@ -88,33 +88,13 @@ function binarysearch(D, p, ub)
         newsol, newoptval = pdisp(D, p, newlb, newub)
         if !isempty(newsol) #problem feasible
             return newoptval, newoptval, newsol
-            # newlb = newoptval
-            # sol = newsol
-            # optval = newoptval
-            # break
         elseif elapsed() < params.max_time
             newub = newlb - 1
-            newlb = max(1, newlb - mult)
+            newlb = max(with_lb, newlb - mult)
             mult *= 2
         else
             solver_status.ok = false
             return 0, newub, sol
         end
     end
-    # println("finished powsearch with lb = $newlb and ub = $newub")
-    # while newlb < newub
-    #     r = ceil(Int64, ( newlb + newub ) / 2)
-    #     newsol, newval = pdisp(D, p, r, newub)
-    #     if !isempty(newsol)
-    #         newlb = optval = newval
-    #         sol = newsol
-    #     elseif elapsed() < params.max_time
-    #         newub = r - 1
-    #     else
-    #         solver_status.ok = false
-    #         return newlb, newub, sol
-    #     end
-    # end
-    # # println("finished binsearch with lb = $newlb and ub = $newub")
-    # optval, optval, sol
 end

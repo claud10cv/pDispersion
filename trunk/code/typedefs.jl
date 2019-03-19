@@ -16,8 +16,9 @@ mutable struct SolverStatus
     endTime::DateTime
     ok::Bool # if false, optimization has been aborted due to time limits
     endStatus
+    endGroupsNb::Int64
 end
 
 params = Parameters(:round, 21600)
 data = Data("", 0, [])
-solver_status = SolverStatus(Dates.now(), Dates.now(), true, :none)
+solver_status = SolverStatus(Dates.now(), Dates.now(), true, :none, 0)
