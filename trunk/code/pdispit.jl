@@ -4,7 +4,7 @@ using Dates
 
 function pdispersion_binary_search(p)
     init_solver_status()
-    memEGB = 1e-9 * (sizeof(Int64) * data.nnodes * data.nnodes)
+    memGB = 1e-9 * (sizeof(Int64) * data.nnodes * data.nnodes)
     if memGB <= 8
         E = build_full_matrix()
         ub = maximum(E)
@@ -53,7 +53,7 @@ function pdispersion_decremental_clustering(p)
     end
     solver_status.endTime = Dates.now()
     opt = [groups[u][1] for u in opt]
-    solver_status.endStatus = solver_stats.ok ? :optimal : :tilim
+    solver_status.endStatus = solver_status.ok ? :optimal : :tilim
     ub, opt
 end
 
