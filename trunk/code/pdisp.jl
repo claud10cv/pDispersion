@@ -120,7 +120,7 @@ function binarysearch(D, p, ub; with_lb = 1)
             newub = r - 1
         else
             solver_status.ok = false
-            return 0, newub, sol
+            break
         end
     end
     return newlb, newub, sol
