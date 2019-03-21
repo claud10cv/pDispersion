@@ -19,6 +19,8 @@ function pdisp(D, p, lb, ub)
         end
     end
     dmap = [d for d in 0 : dmax if !isempty(Dlist[d + 1])]
+    if isempty(dmap) return [], 0
+    end
     ndists = length(dmap)
     adj_k = [trues(nnodes, nnodes) for k in 1 : ndists]
     for k in 2 : ndists
@@ -34,10 +36,10 @@ function pdisp(D, p, lb, ub)
                                     MIPFocus = 1,
                                     TimeLimit = maxtime + 1))
     @variable(m, x[1 : nnodes], Bin)
-    @variable(m, z[2 : ndists], Bin)
-    @objective(m, Max, sum((dmap[k] - dmap[k - 1]) * z[k] for k in 2 : ndists))
+    @variable(m, z[1 : ndists], Bin)
+    @objective(m, Max, dmap[1] * z[1] + sum((dmap[k] - dmap[k - 1]) * z[k] for k in 2 : ndists))
     @constraint(m, sum(x) == p)
-    @constraint(m, monot[k in 3 : ndists], z[k] - z[k - 1] <= 0)
+    @constraint(m, monot[k in 2 : ndists], z[k] - z[k - 1] <= 0)
     @constraint(m, [k in 2 : ndists, (i, j) in Dlist[dmap[k - 1] + 1]], x[i] + x[j] + z[k] <= 2)
     @constraint(m, [i in 1 : nunfeas], x[unfeas[i][1]] + x[unfeas[i][2]] <= 1)
 
