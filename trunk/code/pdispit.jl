@@ -3,6 +3,7 @@ using Distances
 using Dates
 
 function pdispersion_binary_search(p; with_lb = 1)
+    clean_data_points()
     init_solver_status()
 #    memGB = 1e-9 * (sizeof(Int64) * data.nnodes * data.nnodes)
     if data.nnodes <= 2500
@@ -20,6 +21,7 @@ function pdispersion_binary_search(p; with_lb = 1)
 end
 
 function pdispersion_decremental_clustering(p)
+    clean_data_points()
     init_solver_status()
     lb = compute_lower_bound(p)
     # println("lower bound = $lb")
@@ -55,68 +57,5 @@ function pdispersion_decremental_clustering(p)
     opt = [groups[u][1] for u in opt]
     solver_status.endStatus = solver_status.ok ? :optimal : :tilim
     solver_status.endGroupsNb = length(groups)
-    ub, opt
-end
-
-function split_groups_and_build_matrix(groups, E; restrict_to = [], use_diagonal = false)
-    ngroups = length(groups)
-    if isempty(restrict_to)
-        restrict_to = collect(1 : ngroups)
-    end
-    if use_diagonal
-        Ediag = [E[i, i] for i in restrict_to]
-        emax, imax = findmax(Ediag)
-        imax = restrict_to[imax]
-    else
-        cands = []
-        for u in restrict_to, v in restrict_to
-            if v > u && E[u, u] + E[v, v] > 0
-                dist = E[u, v]
-                push!(cands, (u, v, E[u, v]))
-            end
-        end
-        if isempty(cands) return copy(groups), copy(E)
-        else
-            sort!(lt = (x, y) -> x[3] < y[3], cands)
-            u, v = cands[1][1], cands[1][2]
-            if E[u, u] > E[v, v]
-                imax = u
-                emax = E[u, u]
-            else
-                imax = v
-                emax = E[v, v]
-            end
-        end
-    end
-
-    if emax <= 0
-        return copy(groups), copy(E)
-    else
-        group = groups[imax]
-        nnodes = length(group)
-        if nnodes > 2
-            F = data.D[:, group]
-            res = kmeans(convert.(Float64, F), 2)
-            g1 = [group[v] for v in 1 : nnodes if res.assignments[v] == 1]
-            g2 = [group[v] for v in 1 : nnodes if res.assignments[v] == 2]
-        elseif nnodes == 2
-            g1 = [group[1]]
-            g2 = [group[2]]
-        end
-        newgroups = copy(groups)
-        newgroups[imax] = g1
-        push!(newgroups, g2)
-        newE = vcat(E, zeros(Int64, ngroups)')
-        newE = hcat(newE, zeros(Int64, ngroups + 1))
-        for j in 1 : ngroups + 1
-            d1j = d2j = 0
-            for v in newgroups[j]
-                d1j = max(d1j, maximum([distance(u, v) for u in g1]))
-                d2j = max(d2j, maximum([distance(u, v) for u in g2]))
-            end
-            newE[imax, j] = newE[j, imax] = d1j
-            newE[ngroups + 1, j] = newE[j, ngroups + 1] = d2j
-        end
-        return newgroups, newE
-    end
+    ub, opt, groups
 end
