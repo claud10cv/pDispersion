@@ -40,9 +40,9 @@ function plotter(groups, opt, val; radius_factor = 0.25)
             dist = distance(u, v)
             s = Shape([(data.D[1, u], data.D[2, u]), (data.D[1, v], data.D[2, v])])
             if dist <= val
-                plot!(s, linestyle = :solid, linealpha = 0.25, color = :red)
+                plot!(s, linestyle = :solid, linewidth = 2, linealpha = 0.25, color = :red)
             else
-                plot!(s, linestyle = :dot, linealpha = 0.1, color = :magenta)
+                plot!(s, linestyle = :dot, linewidth = 0.5, linealpha = 0.1, color = :cyan)
             end
         end
     end

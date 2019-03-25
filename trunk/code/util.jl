@@ -181,7 +181,7 @@ function split_groups_and_build_matrix(groups, E; restrict_to = [], use_diagonal
         end
         sort!(lt = (x, y) -> x[3] < y[3], cands)
         u, v = cands[1][1], cands[1][2]
-        if E[u, u] > E[v, v]
+        if E[u, u] > E[v, v] || (E[u, u] == E[v, v] && length(groups[u]) > length(groups[v]))
             imax = u
             emax = E[u, u]
         else
