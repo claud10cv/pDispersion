@@ -113,7 +113,7 @@
 	% Full title. Sample:
 	% \TITLE{Bundling Information Goods of Decreasing Value}
 	% Enter the full title:
-	\TITLE{Decremental clustering for the exact solution of the $p$-dispersion problem}
+	\TITLE{Decremental clustering for the solution of $p$-dispersion problems to proven optimality}
 	
 	% Block of authors and their affiliations starts here:
 	% NOTE: Authors with same affiliation, if the order of authors allows,
@@ -121,14 +121,14 @@
 	%   \EMAIL field can be repeated if more than one author
 	\ARTICLEAUTHORS{%
 		\AUTHOR{Claudio Contardo}
-		\AFF{Department of management and technology, ESG UQAM, GERAD and CIRRELT \\\EMAIL{E-mail address: claudio.contardo@gerad.edu}} %, \URL{}}
+		\AFF{Department of management and technology, ESG UQAM, GERAD and CIRRELT \\\EMAIL{E-mail address: claudio.contardo@gerad.ca}} %, \URL{}}
 %		\AUTHOR{Marg Arinella}
 %		\AFF{Institute for Food Adulteration, University of Food Plains, Food Plains, MN 55599, \EMAIL{m.arinella@adult.ufp.edu}}
 		% Enter all authors
 	} % end of the block
 	
 	\ABSTRACT{%
-		Given $n$ points, a symmetric dissimilarity matrix $D$ of dimensions $n\times n$ and an integer $p\geq 2$, the $p$-dispersion problem (\pDP{}) consists in selecting exactly $p$ out of the $n$ points in such a way that the minimum dissimilarity between any pair of selected points is maximum. This problem is \nphard{} when $p$ is an input of the problem. We propose a decremental clustering method to reduce the problem to the solution of a series of smaller \pDP{}s until reaching proven optimality. The proposed method can handle problems orders of magnitude larger than the limits of the state-of-the-art solver for the \pDP{} for small values of $p$.
+		Given $n$ points, a symmetric dissimilarity matrix $D$ of dimensions $n\times n$ and an integer $p\geq 2$, the $p$-dispersion problem (\pDP{}) consists in selecting a subset of exactly $p$ points in such a way that the minimum dissimilarity between any pair of selected points is maximum. The \pDP{} is \nphard{} when $p$ is an input of the problem. We propose a decremental clustering method to reduce the problem to the solution of a series of smaller \pDP{}s until reaching proven optimality. The proposed method can handle problems orders of magnitude larger than the limits of the state-of-the-art solver for the \pDP{} for small values of $p$.
 		% Enter your abstract
 	}%
 	
@@ -206,9 +206,11 @@
 
 In the $p$-dispersion problem (\pDP{}) we are given a set of $n$ points, a symmetric dissmilarity matrix $D = \{D(i, j): 1\leq i, j\leq n\}$ satisfying $D(i, j) \geq 0$ for every $1\leq i, j\leq n$ and $D(i, i) = 0$ for every $1\leq i\leq n$, and an integer $p\geq 2$. The objective is to select $p$ points from the set of $n$ so as to maximize the minimum pairwise dissimilarity within the selected points. The \pDP{}, as noticed by \citet{Erkut1990discrete}, is \nphard{} when $p$ makes part of the input parameters (otherwise it can be solved in $O(n^p)$ time by exhaustive enumeration). We denote this problem, for given input parameters $D$ and $p$ ($n$ is implicitly given in the dimensions of $D$), as \pdp{D}{p}.%$\mathtt{pDP(D, p)}$. 
 
-The \pDP{} arises in a number of practical contexts. In location analysis, a \pDP{} can help decide the placement of installations whose proximity may be hazardous ---as is the case of power plants, oil storage tanks or ammunition---, or in the location of retail stores to prevent cannibalization \citep{Kuby1987Programming}. In multiobjective optimization, in the presence of multiple solutions for a given optimization problem, one may solve a \pDP{} to select a subset of those solutions as complementary as possible with respect to the values for each of the objectives \citep{Saboonchi2014MaxMinMin}. In finance, a \pDP{} can be used as a proxy to build diversified portfolios, which are known to reduce the investment risk \citep{Statman1987how}.
+The \pDP{} arises in a number of practical contexts. In location analysis, a \pDP{} can help decide the placement of installations whose proximity may be hazardous ---as is the case of power plants, oil storage tanks or ammunition---, or in the location of retail stores to prevent cannibalization \citep{Kuby1987Programming}. In multiobjective optimization, in the presence of multiple solutions for a given optimization problem, one may solve a \pDP{} to select a subset of those solutions as complementary as possible with respect to the values for each of the objectives \citep{Saboonchi2014MaxMinMin}. In finance, a \pDP{} can be used as a proxy to build diversified portfolios, which are known to provide low risk \citep{Statman1987how}.
 	
-The state-of-the-art solver for the \pDP{} \citep{Sayah2017new} relies on the solution of an integer program containing $O(n + \Delta)$ variables and constraints, where $\Delta$ is the number of distinct entries in the dissimilarity matrix $D$. The model remains tractable for medium-sized problems but memory/time limits may prevent the solution of problems containing more than a few hundred nodes. The problem size and the large amount of symmetries impact the model's performance. Our article contributes at narrowing this gap by allowing the solution of potentially much larger problems (in terms of the number of nodes $n$), under the assumption that parameter $p$ remains low (typically $\leq 10$ when going large-scale). To this end, we introduce a decremental clustering scheme that in a dynamic fashion forms clusters of points and constructs instances of the \pDP{} that are smaller in size and with much better numerical properties (most notably a much smaller amount of symmetries). These smaller instances are shown to provide upper bounds of the original problem and are much more tractable than the original \pDP{}. The proposed iterative mechanism can scale and solve problems containing up to 100,000 nodes to proven optimality within reasonable time limits, this is orders of magnitude larger than the scope of previous methods. While clustering techniques are of common use in the development of metaheuristics, this is to the best of our knowledge the first time that they are embedded with success within an exact solver for combinatorial problems arising in location analysis.
+The state-of-the-art solver for the \pDP{} \citep{Sayah2017new} relies on the solution of an integer program containing $O(n + \Delta)$ variables and constraints, where $\Delta$ is the number of distinct entries in the dissimilarity matrix $D$. The model remains tractable for medium-sized problems but memory/time limits may prevent the solution of problems containing more than a few hundred nodes. The problem size and the large amount of symmetries impact the model's performance. 
+
+Our article contributes at narrowing this gap by allowing the solution of potentially much larger problems (in terms of the number of nodes $n$), under the assumption that parameter $p$ remains low (typically $\leq 10$ when going large-scale). To this end, we introduce a decremental clustering scheme that in a dynamic fashion forms clusters of points and constructs instances of the \pDP{} that are smaller in size and with much better numerical properties (most notably a much smaller amount of symmetries). These smaller instances are shown to provide upper bounds of the original problem and are much more tractable than the original \pDP{}. The proposed iterative mechanism can scale and solve problems containing up to 100,000 nodes to proven optimality within reasonable time limits, this is orders of magnitude larger than the scope of previous methods. While clustering techniques are of common use in the development of metaheuristics, this is to the best of our knowledge the first time that they are embedded within an exact solver for combinatorial optimization problems arising in location analysis.
 
 The remainder of this article is organized as follows. In Section \ref{section:litreview} we present a review of the relevant scientific literature related to this article. In Section \ref{section:decrclust} we present the decremental clustering framework. In Section \ref{section:computation} we present the results of our computational campaign to assess the effectiveness of our method. Finally, Section \ref{section:conclusions} concludes the paper.
 
@@ -216,13 +218,13 @@ The remainder of this article is organized as follows. In Section \ref{section:l
 
 Applications of the \pDP{} can be found in multiple fields including location analysis, multiobjective optimization and portfolio optimization. \citet{Kuby1987Programming} mention the importance of locating facilites are far as possible from each other when they represent a potential hazard for the surrounding communities. The same authors also mention applications in store location. If two stores of the same chain are located too close, cannibalism may prevent them from selling at full potential. \citet{Saboonchi2014MaxMinMin} discuss an application of the \pDP{} in multiobjective optimization. If the Pareto frontier of a problem contains multiple solutions, one shall solve a \pDP{} to find $p$ such solutions with distinct features. The same authors also describe an application in portfolio optimization to ---given a set of potential investment opportunities--- choose a subset that reduces the closeness in terms of features between the different investment options so as to reduce the risk associated with the portfolio. The problem of selecting diversified portfolios has been recognized as of most importance in Finance \citep{Statman1987how}.
 
-The \pDP{} is tightly related to facility location problems (FLP, \citet{Laporte2015Location}). In its simplest version, a FLP corresponds to the problem of, given a set of potential facility locations and a set of customers, select a subset of potential facility locations and allocate the customers to those facilities, at minimum total cost. Facility location problems and applications have been widely studied in the scientific literature, and several comprehensive surveys have been recently published that take into account several of the latest advances in the field \citep{Laporte2015Location, Melo2009Facility}. The \pDP{} differs from a typical FLP model in the importance of the notion of customer. While they are of key importance for the right choice of the facilities in the FLP, in the \pDP{} they are irrelevant. Only the facility locations are of importance, and their choice must reflect the objective function to be optimized: to maximize the minimum distance between any two chosen facilities. One particular variant of FLP, namely the obnoxious $p$-median problem (OpMP, \citet{Belotti2006branch}), is closely related fo the \pDP{}. In the OpMP, the planner must select the location of $p$ facilities among a larger set of potential ones, and allocate a certain set of customers in such a way that the minimum distance from any customer to its closest facility, is maximized. This problem arises in the location of hazardous or obnoxious installations.
+The \pDP{} is tightly related to facility location problems (FLP, \citet{Laporte2015Location}). In its simplest version, a FLP corresponds to the problem of, given a set of potential facility locations and a set of customers, select a subset of potential facility locations and allocate the customers to those facilities, at minimum total cost. Facility location problems and applications have been widely studied in the scientific literature, and several comprehensive surveys have been recently published that take into account several of the latest advances in the field \citep{Laporte2015Location, Melo2009Facility}. The \pDP{} differs from a typical FLP model in the importance of the notion of customer. While they are of key importance for the right choice of the facilities in the FLP, in the \pDP{} they are irrelevant. Only the facility locations are of importance, and their choice must reflect the objective function to be optimized: to maximize the minimum distance between any two chosen facilities. One particular variant of FLP, namely the obnoxious $p$-median problem (OpMP, \citet{Belotti2006branch}), is closely related fo the \pDP{}. In the OpMP, we are given a set of potential facilities and of customers. A planner must select the location of $p$ facilities in such a way that the minimum distance from any customer to its closest facility is maximized. This problem arises in the location of hazardous or obnoxious installations.
 
 The \pDP{} is also related to clustering problems, and more specifically to the maximin split clustering problem (MMSCP). In the MMSCP, we are given a set $N$ of observations, a dissmilarity matrix $D$ and a target number of clusters $p$. One has to group the observations into $p$ groups such that the minimum dissimilarity between any two observations belonging to different groups is maximized. The MMSCP, unlike the \pDP{}, is polynomially solvable \citep{Delattre1980Bicriterion}.
 
 Regarding the methodological contributions to the solution of the \pDP{}, a handful of articles have dealt with the problem of solving the \pDP{} to proven optimality. \citet{Pisinger2006Upper} introduces a quadratic formulation for the \pDP{} which is then partially solved by a series of relaxations including semidefinite programming, and linearization-reformulation. The bounds are embedded within a branch-and-bound framework and the author reports the solution of problems containing a few hundred nodes. \citet{Kuby1987Programming} introduces a mixed-integer linear formulation of the problem with a series of Big-M coefficients. The model can be seen as a linearization of that of \citet{Pisinger2006Upper} even though it was introduced almost 20 years earlier. The model is more compact than that of \citet{Pisinger2006Upper} but provides much weaker upper bounds. \citet{Sayah2017new} introduces a novel pure binary compact formulation of the problem that the authors solve by branch-and-cut. Clique-like inequalities are used to strengthen the model. Problems with up to 1,000 nodes are solved to proven optimality as reported by the authors. The same authors also mention that linear and binary search methods may be used with the different formulations to speed up the solution process. Such techniques have already been studied by \citet{Chandrasekaran1981Location, Pisinger2006Upper} for the \pDP{}. For this to be beneficial, the models need to exploit the availability of lower and upper bounds to fathom non-promising branches of the implicit enumeration tree.
 
-The decremental clustering method introduced in this article is tightly related to other decremental relaxation mechanisms recently introduced in the literature for the solution of other MiniMax (or equivalently MaxiMin) combinatorial optimization problems to proven optimality. In the vertex p-center problem (VPCP), for the same input parameters $n, D$ and $p$, one has to select $p$ points and to allocate the remaining points to its closest center in such a way that the maximum dissimilarity between a node and its assigned center is minimized. \citet{Chen2009New} and \citet{Contardo2019scalable} propose decremental relaxation mechanisms to ignore some node allocation constraints, which are only added as needed. The relaxed problems can thus be modeled as smaller VPCPs in an iterative manner. \citet{Contardo2019scalable} report the solution of problems containing up to 1M observations to proven optimality. The minimax diameter clustering problem (MMDCP) is another problem for which the decremental relaxation mechanism has proven useful. In the MMDCP, given $n$ points, a dissmilarity matrix $D$ and an integer $k\geq 2$, the objective is to groups the observations into $k$ clusters such as to minimize the maximum intra-cluster dissimlarity. \citet{Aloise2018sampling} introduced a sampling mechanism to solve the MMDCP as a series of smaller MMDCPs in a dynamic fashion, allowing the solution to proven optimality of problems containing up to 600k observations.
+The decremental clustering method introduced in this article is tightly related to other decremental relaxation mechanisms recently introduced in the literature for the solution of other MiniMax (or equivalently MaxiMin) combinatorial optimization problems to proven optimality. In the vertex p-center problem (VPCP), for the same input parameters $n, D$ and $p$, one has to select $p$ points and allocate the remaining points to their closest centers in such a way that the maximum dissimilarity between a node and its assigned center is minimized. \citet{Chen2009New} and \citet{Contardo2019scalable} propose decremental relaxation mechanisms to ignore some node allocation constraints, which are only added as needed. The relaxed problems can thus be modeled as smaller VPCPs in an iterative manner. \citet{Contardo2019scalable} report the solution of problems containing up to 1M observations to proven optimality. The minimax diameter clustering problem (MMDCP) is another problem for which the decremental relaxation mechanism has proven useful. In the MMDCP, given $n$ points, a dissmilarity matrix $D$ and an integer $k\geq 2$, the objective is to group the observations into $k$ clusters such as to minimize the maximum intra-cluster dissimlarity. \citet{Aloise2018sampling} introduced a sampling mechanism to solve the MMDCP as a series of smaller MMDCPs in a dynamic fashion, allowing the solution to proven optimality of problems containing up to 600k observations.
 
 Using clustering mechanisms for finding feasible solutions for hard combinatorial optimization problems is not something totally new in the operations research literature. Embedding a clustering scheme within a heuristic solver has been common practice for many years and for multiple classes of problems. In vehicle routing and scheduling, the so-called cluster-first-route-second \citep{Solomon1987algorithms, Braysy2005Vehicle} and route-first-cluster-second \citep{Beasley1983route, Prins2014Order} paradigms are both based on combining routing and clustering techniques so as to reduce the computational burden associated with the routing or scheduling substructures. None of those techniques, however, provide any guarantee of optimality.
 
@@ -314,7 +316,7 @@ In Table \ref{table:small} we report a comparison between our method and our imp
 
 \begin{table}[!hbtp]
 	\centering
-	\scalebox{0.63}{
+	\scalebox{0.6}{
 		\begin{tabular}{|l|rr|rr|rr|rr|rr|rr|rr|rr|}
 			\hline
 			\multirow{3}{*}{Instance}& \multicolumn{8}{|c|}{\citet{Sayah2017new}}& \multicolumn{8}{|c|}{This paper}\\
@@ -323,62 +325,66 @@ In Table \ref{table:small} we report a comparison between our method and our imp
 			\cline{2-17}
 			& UB & CPU & UB & CPU & UB & CPU & UB & CPU & UB & CPU & UB & CPU & UB & CPU & UB & CPU\\
 			\hline
-			rw1621 & \textbf{971} & 2,010.3 & \textbf{558} & 700.7 & \textbf{407} & 1,030.3 & \textbf{339} & 932.3 & \textbf{971} & 22.5 & \textbf{558} & 26.8 & \textbf{407} & 35.9 & \textbf{339} & 50.4\\
-			u1817 & \textbf{1,535} & 1,109.4 & \textbf{881} & 2,384.8 & 678 & TL & 1,077 & TL & \textbf{1,535} & 27.3 & \textbf{881} & 52.8 & \textbf{665} & 513.0 & \textbf{559} & 1,168.6\\
-			rl1889 & \textbf{10,166} & 4,826.6 & \textbf{5,846} & 22,330.2 & 4,591 & TL & \textbf{3,727} & 23,249.5 & \textbf{10,166} & 28.4 & \textbf{5,846} & 63.7 & \textbf{4,478} & 183.0 & \textbf{3,727} & 292.1\\
-			mu1979 & \textbf{3,845} & 1,712.8 & \textbf{2,159} & 1,101.9 & \textbf{1,562} & 1,907.4 & \textbf{1,229} & 2,068.8 & \textbf{3,845} & 26.0 & \textbf{2,159} & 28.0 & \textbf{1,562} & 34.5 & \textbf{1,229} & 44.9\\
-			pr2392 & \textbf{8,086} & 9,225.5 & 4,977 & TL & 3,790 & TL & 3,184 & TL & \textbf{8,086} & 38.1 & \textbf{4,976} & 125.6 & \textbf{3,788} & 478.4 & \textbf{3,150} & 6,577.1\\
-			d15112-modif-2500 & \textbf{12,217} & 18,518.2 & 7,153 & TL & \textbf{5,771} & 16,777.8 & 4,813 & TL & \textbf{12,217} & 38.7 & \textbf{7,132} & 92.3 & \textbf{5,771} & 257.0 & \textbf{4,773} & 974.5\\
+			\texttt{rw1621.tsp} & \textbf{971} & 206.8 & \textbf{558} & 163.2 & \textbf{407} & 474.9 & \textbf{339} & 582.8 & \textbf{971} & 16.1 & \textbf{558} & 17.8 & \textbf{407} & 24.4 & \textbf{339} & 32.2\\
+			\texttt{u1817.tsp} & \textbf{1,535} & 690.6 & \textbf{881} & 1,897.4 & \textbf{665} & 7,046.3 & 1,077 & TL & \textbf{1,535} & 27.6 & \textbf{881} & 52.6 & \textbf{665} & 371.9 & \textbf{559} & 1,578.9\\
+			\texttt{rl1889.tsp} & \textbf{10,166} & 4,475.0 & \textbf{5,846} & 3,630.3 & \textbf{4,478} & 72,237.8 & 4,706 & TL & \textbf{10,166} & 28.6 & \textbf{5,846} & 74.8 & \textbf{4,478} & 221.3 & \textbf{3,727} & 400.3\\
+			\texttt{mu1979.tsp} & \textbf{3,845} & 1,327.9 & \textbf{2,159} & 1,100.2 & \textbf{1,562} & 1,781.7 & \textbf{1,229} & 2,085.2 & \textbf{3,845} & 28.2 & \textbf{2,159} & 30.7 & \textbf{1,562} & 33.3 & \textbf{1,229} & 63.4\\
+			\texttt{pr2392.tsp} & \textbf{8,086} & 9,830.1 & \textbf{4,976} & 18,112.0 & \textbf{3,788} & 73,647.6 & 3,173 & TL & \textbf{8,086} & 38.7 & \textbf{4,976} & 121.9 & \textbf{3,788} & 375.0 & \textbf{3,150} & 6,990.6\\
+			\texttt{d15112-modif-2500.tsp} & \textbf{12,217} & 24,402.8 & \textbf{7,132} & 22,290.7 & \textbf{5,771} & 12,580.9 & 4,776 & TL & \textbf{12,217} & 46.1 & \textbf{7,132} & 95.9 & \textbf{5,771} & 222.8 & \textbf{4,773} & 583.7\\
 			\hline
 	\end{tabular}}
 	\caption{Method comparison on small instances\label{table:small}}
 \end{table}
 
-In Table \ref{table:large} we report the results obtained by our method for the problems containing 3,000 or more nodes. We report, for each value of $p$, the final upper bound (under column labeled \texttt{UB}), the CPU time in seconds (under column labeled \texttt{CPU}), and the final number of clusters at the final iteration (under column labeled \texttt{C}). Once again, we mark in bold characters whenever a problem is solved to proven optimality. As the results show, our method is robust for solving \pDP{}s for small values of $p$. Only one in 68 problems could not be solved within the time limit for $p\leq 10$. For larger $p$, the method is less robust but still capable of handling some very large problems. We would like to remark that the largest instance considered in this study, namely problem \texttt{sra104815.tsp} would require more than 40 GB of RAM is the full dissimilarity matrix had to be stored in RAM, let alone to load the associated integer program required to execute \citeauthor{Sayah2017new}'s method. Our method, however, avoids this storage and did never require more than 2 GB to run even for the largest problems.
+
+In Table \ref{table:large} we report the results obtained by our method for the problems containing 3,000 or more nodes. We report, for each value of $p$, the final upper bound (under column labeled \texttt{UB}), the CPU time in seconds (under column labeled \texttt{CPU}), and the final number of clusters at the final iteration (under column labeled \texttt{C}). Once again, we mark in bold characters whenever a problem is solved to proven optimality. In the last two rows we report ---for each value of $p$--- the total number of problems solved to proven optimality as well as the average CPU times and the average number of clusters restricted to the problems solved to proven optimality. As the results show, our method is robust for solving \pDP{}s for small values of $p$. Only one in 68 problems could not be solved within the time limit of one day for $p\leq 10$. For larger values of $p$, the method is less robust but still capable of handling some very large problems. We would like to remark that the largest instance considered in this study, namely problem \texttt{sra104815.tsp} would require more than 40 GB of RAM if the full dissimilarity matrix had to be stored in RAM, let alone to load and solve the associated integer program required to execute \citeauthor{Sayah2017new}'s method. Our method avoids this storage and never required more than 2 GB to run even for the largest problems.
 
 \begin{table}[!hbtp]
 	\centering
-	\scalebox{0.83}{
+	\scalebox{0.79}{
 		\begin{tabular}{|l|rrr|rrr|rrr|rrr|}
 			\hline
 			\multirow{2}{*}{Instance} & \multicolumn{3}{|c|}{$p = 5$} & \multicolumn{3}{|c|}{$p = 10$} & \multicolumn{3}{|c|}{$p = 15$} & \multicolumn{3}{|c|}{$p = 20$}\\
 			\cline{2-13}
 			& \texttt{UB} & \texttt{CPU} & \texttt{C} & \texttt{UB} & \texttt{CPU} & \texttt{C} & \texttt{UB} & \texttt{CPU} & \texttt{C} & \texttt{UB} & \texttt{CPU} & \texttt{C}\\
 			\hline
-			pcb3038 & \textbf{2,390} & 48.2 & 58 & \textbf{1,414} & 356.8 & 474 & \textbf{1,075} & 4,002.8 & 775 & \textbf{898} & 16,815.1 & 1072\\
-			nu3496 & \textbf{2,462} & 58.0 & 59 & \textbf{1,524} & 72.0 & 162 & \textbf{1,092} & 114.4 & 310 & \textbf{926} & 117.0 & 362\\
-			ca4663 & \textbf{34,256} & 87.8 & 54 & \textbf{20,267} & 115.2 & 149 & \textbf{15,467} & 153.4 & 263 & \textbf{12,376} & 165.1 & 376\\
-			rl5915 & \textbf{9,793} & 171.8 & 105 & \textbf{6,160} & 267.8 & 302 & \textbf{4,544} & 15,495.5 & 1058 & \textbf{3,887} & 15,291.5 & 1055\\
-			rl5934 & \textbf{10,396} & 147.4 & 77 & \textbf{5,951} & 495.8 & 395 & \textbf{4,576} & 2,703.7 & 677 & \textbf{3,817} & 20,639.4 & 1140\\
-			tz6117 & \textbf{6,116} & 189.7 & 104 & \textbf{3,818} & 244.9 & 277 & \textbf{2,887} & 997.2 & 591 & \textbf{2,401} & 3,943.3 & 881\\
-			eg7146 & \textbf{5,247} & 230.3 & 66 & \textbf{3,187} & 277.0 & 150 & \textbf{2,377} & 282.1 & 237 & \textbf{1,833} & 312.4 & 325\\
-			pla7397 & \textbf{374,026} & 294.8 & 106 & \textbf{238,412} & 426.7 & 274 & \textbf{183,522} & 640.3 & 398 & \textbf{148,000} & 899.0 & 685\\
-			ym7663 & \textbf{4,974} & 207.2 & 86 & \textbf{2,743} & 335.8 & 196 & \textbf{1,987} & 357.6 & 318 & \textbf{1,578} & 678.1 & 535\\
-			pm8079 & \textbf{2,078} & 248.7 & 53 & \textbf{1,347} & 305.5 & 174 & \textbf{941} & 358.4 & 318 & \textbf{805} & 408.3 & 482\\
-			ei8246 & \textbf{2,426} & 326.7 & 158 & \textbf{1,500} & 360.5 & 292 & \textbf{1,113} & 2,597.3 & 750 & \textbf{939} & 11,699.1 & 1140\\
-			ar9152 & \textbf{13,820} & 339.4 & 64 & \textbf{8,117} & 392.5 & 227 & \textbf{6,371} & 553.4 & 360 & \textbf{5,019} & 8,751.5 & 934\\
-			ja9847 & \textbf{10,651} & 367.4 & 66 & \textbf{5,405} & 431.3 & 130 & \textbf{3,907} & 483.4 & 238 & \textbf{3,055} & 531.9 & 453\\
-			gr9882 & \textbf{4,295} & 447.9 & 114 & \textbf{2,633} & 522.8 & 289 & \textbf{1,969} & 655.2 & 472 & \textbf{1,625} & 758.4 & 597\\
-			kz9976 & \textbf{13,969} & 402.2 & 75 & \textbf{8,607} & 493.3 & 239 & \textbf{6,360} & 736.9 & 479 & \textbf{5,230} & 5,475.8 & 971\\
-			fi10639 & \textbf{6,284} & 396.4 & 70 & \textbf{3,767} & 589.0 & 262 & \textbf{2,806} & 3,388.6 & 752 & \textbf{2,322} & 13,091.2 & 1041\\
-			rl11849 & \textbf{10,736} & 598.4 & 102 & \textbf{6,243} & 994.9 & 435 & \textbf{4,719} & 8,749.8 & 951 & \textbf{4,000} & 44,051.3 & 1176\\
-			brd14051 & \textbf{4,379} & 726.2 & 73 & \textbf{2,465} & 1,130.0 & 377 & \textbf{1,862} & 1,547.2 & 624 & \textbf{1,569} & 4,896.5 & 857\\
-			mo14185 & \textbf{4,748} & 677.5 & 57 & \textbf{2,803} & 1,007.9 & 296 & \textbf{2,125} & 1,726.8 & 645 & \textbf{1,746} & 6,967.1 & 1063\\
-			ho14473 & \textbf{2,357} & 870.9 & 75 & \textbf{1,427} & 1,157.8 & 302 & \textbf{1,104} & 1,225.2 & 435 & \textbf{914} & 3,747.3 & 763\\
-			it16862 & \textbf{5,855} & 1,156.1 & 86 & \textbf{3,407} & 1,147.7 & 145 & \textbf{2,468} & 1,364.0 & 364 & \textbf{2,100} & 2,057.7 & 714\\
-			d18512 & \textbf{4,396} & 1,624.9 & 172 & \textbf{2,599} & 5,478.7 & 792 & \textbf{2,109} & 16,337.8 & 1211 & \textbf{1,762} & 55,518.6 & 1312\\
-			vm22775 & \textbf{5,348} & 1,668.9 & 73 & \textbf{2,789} & 2,232.3 & 217 & \textbf{2,237} & 2,419.9 & 423 & \textbf{1,817} & 2,815.5 & 599\\
-			sw24978 & \textbf{7,128} & 2,556.5 & 95 & \textbf{4,196} & 3,160.8 & 341 & \textbf{3,149} & 6,431.2 & 914 & \textbf{2,681} & 20,827.2 & 1186\\
-			fyg28534 & \textbf{565} & 3,524.3 & 92 & \textbf{340} & 17,071.7 & 1209 & \textbf{276} & 10,940.5 & 1012 & 230 & TL & 1538\\
-			bm33708 & \textbf{7,094} & 4,350.2 & 104 & \textbf{3,867} & 5,548.2 & 290 & \textbf{2,876} & 14,543.6 & 1080 & \textbf{2,390} & 24,265.0 & 1231\\
-			pla33810 & \textbf{417,437} & 5,460.1 & 152 & \textbf{262,557} & 42,357.6 & 864 & 208,785 & TL & 998 & 178,157 & TL & 829\\
-			bby34656 & \textbf{623} & 5,261.0 & 103 & \textbf{377} & 10,361.3 & 906 & \textbf{299} & 27,055.6 & 1287 & 250 & TL & 1547\\
-			pba38478 & \textbf{698} & 5,607.6 & 84 & \textbf{407} & 10,580.4 & 738 & \textbf{311} & 35,803.4 & 1437 & 266 & TL & 1600\\
-			ch71009 & \textbf{22,263} & 19,992.8 & 112 & \textbf{14,353} & 28,012.0 & 506 & \textbf{10,845} & 35,813.0 & 1034 & \textbf{9,311} & 43,515.4 & 1247\\
-			pla85900 & \textbf{553,829} & 35,265.8 & 162 & 348,796 & TL & 809 & 280,109 & TL & 715 & 242,069 & TL & 659\\
-			sra104815 & \textbf{1,066} & 52,743.1 & 211 & \textbf{669} & 65,996.8 & 614 & \textbf{518} & 76,573.0 & 1167 & 432 & TL & 1333\\
+			\texttt{pcb3038.tsp} & \textbf{2,390} & 49.8 & 65 & \textbf{1,414} & 478.1 & 452 & \textbf{1,075} & 4,275.8 & 781 & \textbf{898} & 15,851.1 & 1050\\
+			\texttt{nu3496.tsp} & \textbf{2,462} & 33.8 & 59 & \textbf{1,524} & 47.2 & 161 & \textbf{1,092} & 91.6 & 334 & \textbf{926} & 105.8 & 410\\
+			\texttt{ca4663.tsp} & \textbf{34,256} & 97.1 & 71 & \textbf{20,267} & 142.8 & 227 & \textbf{15,467} & 165.8 & 276 & \textbf{12,376} & 208.3 & 357\\
+			\texttt{rl5915.tsp} & \textbf{9,793} & 166.9 & 108 & \textbf{6,160} & 217.5 & 234 & \textbf{4,544} & 14,236.0 & 1024 & \textbf{3,887} & 16,894.9 & 987\\
+			\texttt{rl5934.tsp} & \textbf{10,396} & 171.9 & 110 & \textbf{5,951} & 713.7 & 454 & \textbf{4,576} & 3,904.0 & 762 & \textbf{3,817} & 25,333.0 & 1096\\
+			\texttt{tz6117.tsp} & \textbf{6,116} & 207.8 & 157 & \textbf{3,818} & 249.7 & 307 & \textbf{2,887} & 1,100.9 & 619 & \textbf{2,401} & 3,190.1 & 828\\
+			\texttt{eg7146.tsp} & \textbf{5,247} & 236.4 & 83 & \textbf{3,187} & 265.0 & 172 & \textbf{2,377} & 264.0 & 213 & \textbf{1,833} & 433.0 & 390\\
+			\texttt{pla7397.tsp} & \textbf{374,026} & 273.3 & 78 & \textbf{238,412} & 342.5 & 229 & \textbf{183,522} & 544.8 & 420 & \textbf{148,000} & 1,218.7 & 654\\
+			\texttt{ym7663.tsp} & \textbf{4,974} & 242.0 & 71 & \textbf{2,743} & 274.1 & 143 & \textbf{1,987} & 332.8 & 292 & \textbf{1,578} & 723.3 & 554\\
+			\texttt{pm8079.tsp} & \textbf{2,078} & 113.3 & 60 & \textbf{1,347} & 121.0 & 167 & \textbf{941} & 157.0 & 309 & \textbf{805} & 168.1 & 417\\
+			\texttt{ei8246.tsp} & \textbf{2,426} & 308.1 & 118 & \textbf{1,500} & 361.9 & 311 & \textbf{1,113} & 3,542.0 & 863 & \textbf{939} & 12,292.2 & 1156\\
+			\texttt{ar9152.tsp} & \textbf{13,820} & 173.0 & 57 & \textbf{8,117} & 239.4 & 216 & \textbf{6,371} & 429.9 & 422 & \textbf{5,019} & 5,184.0 & 833\\
+			\texttt{ja9847.tsp} & \textbf{10,651} & 352.6 & 69 & \textbf{5,405} & 393.8 & 153 & \textbf{3,907} & 436.7 & 198 & \textbf{3,055} & 531.0 & 441\\
+			\texttt{gr9882.tsp} & \textbf{4,295} & 432.6 & 113 & \textbf{2,633} & 501.3 & 274 & \textbf{1,969} & 616.8 & 443 & \textbf{1,625} & 677.4 & 525\\
+			\texttt{kz9976.tsp} & \textbf{13,969} & 415.9 & 94 & \textbf{8,607} & 495.5 & 285 & \textbf{6,360} & 835.2 & 479 & \textbf{5,230} & 5,189.4 & 937\\
+			\texttt{fi10639.tsp} & \textbf{6,284} & 479.3 & 83 & \textbf{3,767} & 704.6 & 407 & \textbf{2,806} & 2,588.7 & 716 & \textbf{2,322} & 17,955.2 & 1146\\
+			\texttt{rl11849.tsp} & \textbf{10,736} & 556.3 & 91 & \textbf{6,243} & 1,065.9 & 477 & \textbf{4,719} & 7,836.8 & 908 & \textbf{4,000} & 32,583.2 & 1214\\
+			\texttt{usa13509.tsp} & \textbf{229,767} & 712.3 & 66 & \textbf{133,500} & 1,082.1 & 330 & \textbf{99,689} & 7,022.5 & 726 & 83,538 & TL & 1413\\
+			\texttt{brd14051.tsp} & \textbf{4,379} & 694.7 & 68 & \textbf{2,465} & 1,161.8 & 358 & \textbf{1,862} & 2,025.2 & 681 & \textbf{1,569} & 4,317.6 & 872\\
+			\texttt{mo14185.tsp} & \textbf{4,748} & 784.8 & 76 & \textbf{2,803} & 949.9 & 299 & \textbf{2,125} & 1,785.6 & 641 & \textbf{1,746} & 5,526.7 & 960\\
+			\texttt{ho14473.tsp} & \textbf{2,357} & 215.5 & 75 & \textbf{1,427} & 315.0 & 274 & \textbf{1,104} & 429.0 & 452 & \textbf{914} & 5,563.1 & 934\\
+			\texttt{d15112.tsp} & \textbf{12,348} & 1,127.7 & 168 & \textbf{7,319} & 4,003.8 & 704 & \textbf{5,907} & 9,635.4 & 932 & \textbf{4,944} & 84,652.7 & 1384\\
+			\texttt{it16862.tsp} & \textbf{5,855} & 1,187.3 & 98 & \textbf{3,407} & 1,246.1 & 171 & \textbf{2,468} & 1,572.3 & 425 & \textbf{2,100} & 1,870.6 & 610\\
+			\texttt{d18512.tsp} & \textbf{4,396} & 1,570.8 & 164 & \textbf{2,599} & 4,752.5 & 801 & \textbf{2,109} & 10,771.2 & 1050 & \textbf{1,762} & 38,044.8 & 1269\\
+			\texttt{vm22775.tsp} & \textbf{5,348} & 1,708.1 & 72 & \textbf{2,789} & 2,134.8 & 177 & \textbf{2,237} & 2,676.0 & 386 & \textbf{1,817} & 2,934.2 & 612\\
+			\texttt{sw24978.tsp} & \textbf{7,128} & 2,181.0 & 81 & \textbf{4,196} & 3,030.5 & 348 & \textbf{3,149} & 4,869.8 & 714 & \textbf{2,681} & 20,742.0 & 1276\\
+			\texttt{fyg28534.tsp} & \textbf{565} & 3,374.2 & 91 & \textbf{340} & 35,256.4 & 1314 & \textbf{276} & 12,926.6 & 1131 & 230 & TL & 1556\\
+			\texttt{bm33708.tsp} & \textbf{7,094} & 4,195.4 & 116 & \textbf{3,867} & 5,662.3 & 235 & \textbf{2,876} & 16,009.8 & 1113 & \textbf{2,390} & 23,630.3 & 1229\\
+			\texttt{pla33810.tsp} & \textbf{417,437} & 5,544.0 & 164 & \textbf{262,557} & 44,046.0 & 833 & 207,885 & TL & 1017 & 178,213 & TL & 860\\
+			\texttt{bby34656.tsp} & \textbf{623} & 4,639.8 & 92 & \textbf{377} & 10,758.9 & 861 & \textbf{299} & 23,676.6 & 1268 & 251 & TL & 1488\\
+			\texttt{pba38478.tsp} & \textbf{698} & 6,203.4 & 94 & \textbf{407} & 9,829.3 & 669 & \textbf{311} & 38,457.8 & 1464 & 266 & TL & 1596\\
+			\texttt{ch71009.tsp} & \textbf{22,263} & 21,811.4 & 117 & \textbf{14,353} & 25,522.2 & 547 & \textbf{10,845} & 38,990.8 & 1011 & \textbf{9,311} & 38,499.4 & 1221\\
+			\texttt{pla85900.tsp} & \textbf{553,829} & 32,147.4 & 161 & 348,661 & TL & 843 & 278,770 & TL & 807 & 240,465 & TL & 705\\
+			\texttt{sra104815.tsp} & \textbf{1,066} & 52,593.4 & 200 & \textbf{669} & 64,275.4 & 567 & \textbf{518} & 76,409.9 & 1113 & 432 & TL & 1332\\
 			\hline
-			Optimal & \multicolumn{3}{|c|}{32/32} & \multicolumn{3}{|c|}{31/32} & \multicolumn{3}{|c|}{30/32} & \multicolumn{3}{|c|}{26/32}\\
+			Optimal & \multicolumn{3}{|c|}{34/34} & \multicolumn{3}{|c|}{33/34} & \multicolumn{3}{|c|}{32/34} & \multicolumn{3}{|c|}{27/34}\\
+			Average & & 4,265 & 100 & & 6,686 & 399 & & 9,019 & 693 & & 13,493 & 865\\
 			\hline
 	\end{tabular}}
 	\caption{Decremental clustering on large instances\label{table:large}}
@@ -386,13 +392,13 @@ In Table \ref{table:large} we report the results obtained by our method for the 
 
 \section{Concluding remarks\label{section:conclusions}}
 
-We have introduced a decremental clustering method for the solution of the $p$-dispersion problem (\pDP{}). Our method works by iteratively clustering nodes that are close to each other and solving a restricted \pDP{} to compute a non-increasing upper bound. In practice, for small values of $p$, we are capable of proving optimality within a few iterations. The method is capable of handling and solving \pDP{}s containing up to 100,000 nodes within a day, this is orders of magnitude larger than the limits of previous methods. To the best of our knowledge, this is the time that a clustering technique is embedded within an exact solver for location analysis. As an avenue of further research, we believe that the algorithm could be adapted to solve variants of the \pDP{} or other location problems with a potential to benefit from clustering techniques. While he potential of clustering techniques has been widely studied in the scientific literature in non-supervised learning and in heuristics for combinatorial optimization, their use within exact methods is rather new and their full potential is yet to be understood in more depth.
+We have introduced a decremental clustering method for the solution of the $p$-dispersion problem (\pDP{}). Our method works by building an initial clustering of the nodes and by refining this clustering in an iterative fashion. In each iteration, a restricted \pDP{} is solved to compute upper bounds of the problem. In practice, for small values of $p$, we are capable of proving optimality within a few iterations for problems containing up to 100,000 nodes, this is orders of magnitude larger than the limits of previous methods. To the best of our knowledge, this is the first time that a clustering technique is embedded within an exact solver for location analysis. As an avenue of further research, we believe that the algorithm could be adapted to solve variants of the \pDP{} or other location problems with a potential to benefit from clustering techniques. While this potential is well understood in the scientific literature on non-supervised learning and heuristics for combinatorial optimization, their use within exact methods is rather new and its full potential is yet to be understood in more depth.
 
 \section*{Acknowledgments}
 
 The author thanks the Natural Sciences and Engineering Research Council of Canada (NSERC) under Discovery Grant 435824-2013 for its financial support.
 
-\bibliographystyle{abbrvnat}
+\bibliographystyle{informs2014}
 \bibliography{refs}
 
 \end{document}

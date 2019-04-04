@@ -106,6 +106,39 @@ function build_initial_groups(p)
     E, groups
 end
 
+function compute_lower_bound2(p)
+    function d0(u)
+        if params.wtype == :ceil
+            ceil(Int64, euclidean(data.D[:, u], [0, 0]))
+        else
+            round(Int64, euclidean(data.D[:, u], [0, 0]))
+        end
+    end
+    opt_coords = zeros(2, 0)
+    let
+        dists = [d0(u) for u in 1 : data.nnodes]
+        val, u = findmax(dists)
+        opt_coords = hcat(opt_coords, data.D[:, u])
+    end
+    function d(u, v)
+        if params.wtype == :ceil
+            ceil(Int64, euclidean(data.D[:, u], opt_coords[:, v]))
+        else
+            round(Int64, euclidean(data.D[:, u], opt_coords[:, v]))
+        end
+    end
+    function mind(u)
+        minimum([d(u, v) for v in 1 : size(opt_coords, 2)])
+    end
+    lb = typemax(Int64)
+    while size(opt_coords, 2) < p
+        dists = [mind(u) for u in 1 : data.nnodes]
+        val, u = findmax(dists)
+        opt_coords = hcat(opt_coords, data.D[:, u])
+        lb = min(lb, val)
+    end
+    lb
+end
 function compute_lower_bound(p)
     sorted = collect(1 : data.nnodes)
     lb = 0
