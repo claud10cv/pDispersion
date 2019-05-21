@@ -23,7 +23,7 @@ end
 function pdispersion_decremental_clustering(p)
     clean_data_points()
     init_solver_status()
-    lb = compute_lower_bound2(p)
+    lb, nothing = compute_lower_bound(p)
     # println("lower bound = $lb")
     dim, nnodes = size(data.D)
     E, groups = build_initial_groups(p)

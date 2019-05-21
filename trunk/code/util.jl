@@ -3,12 +3,33 @@ using Gurobi
 using JuMP
 using Dates
 
-function distance(u, v)
+function distance(u, v = 0)
+    q = size(data.Q, 2)
+    m1 = m2 = m3 = m4 = typemax(Int64)
     if params.wtype == :ceil
-        ceil(Int64, euclidean(data.D[:, u], data.D[:, v]))
+        if v > 0
+            m1 = ceil(Int64, euclidean(data.D[:, u], data.D[:, v]))
+        end
+        if q > 0
+            m2 = data.dQ
+            m3 = minimum([ceil(Int64, euclidean(data.D[:, u], data.Q[:, w])) for w in 1 : q])
+            if v > 0
+                m4 = minimum([ceil(Int64, euclidean(data.D[:, v], data.Q[:, w])) for w in 1 : q])
+            end
+        end
     else
-        round(Int64, euclidean(data.D[:, u], data.D[:, v]))
+        if v > 0
+            m1 = round(Int64, euclidean(data.D[:, u], data.D[:, v]))
+        end
+        if q > 0
+            m2 = data.dQ
+            m3 = minimum([round(Int64, euclidean(data.D[:, u], data.Q[:, w])) for w in 1 : q])
+            if v > 0
+                m4 = minimum([round(Int64, euclidean(data.D[:, v], data.Q[:, w])) for w in 1 : q])
+            end
+        end
     end
+    return minimum([m1, m2, m3, m4])
 end
 
 function build_full_matrix()
@@ -22,7 +43,21 @@ end
 function clean_data_points()
     init_data_points = data.nnodes
     E = [(data.D[1, u], data.D[2, u]) for u in 1 : data.nnodes]
-    # println(E)
+    sort!(E)
+    unique!(E)
+    data.nnodes = length(E)
+    data.D = zeros(Float64, 2, data.nnodes)
+    for u in 1 : data.nnodes
+        data.D[1, u] = E[u][1]
+        data.D[2, u] = E[u][2]
+    end
+    end_data_points = data.nnodes
+    println("removed $(init_data_points - end_data_points) points from the data")
+end
+
+function reduce_data_using_Q(lb)
+    init_data_points = data.nnodes
+    E = [(data.D[1, u], data.D[2, u]) for u in 1 : data.nnodes if distance(u) >= lb]
     sort!(E)
     unique!(E)
     data.nnodes = length(E)
@@ -106,7 +141,7 @@ function build_initial_groups(p)
     E, groups
 end
 
-function compute_lower_bound2(p)
+function compute_lower_bound(p)
     function d0(u)
         if params.wtype == :ceil
             ceil(Int64, euclidean(data.D[:, u], [0, 0]))
@@ -114,7 +149,8 @@ function compute_lower_bound2(p)
             round(Int64, euclidean(data.D[:, u], [0, 0]))
         end
     end
-    opt_coords = zeros(2, 0)
+    q = size(data.Q, 2)
+    opt_coords = copy(data.Q)#zeros(2, 0)
     let
         dists = [d0(u) for u in 1 : data.nnodes]
         val, u = findmax(dists)
@@ -130,46 +166,14 @@ function compute_lower_bound2(p)
     function mind(u)
         minimum([d(u, v) for v in 1 : size(opt_coords, 2)])
     end
-    lb = typemax(Int64)
-    while size(opt_coords, 2) < p
+    lb = data.dQ#typemax(Int64)
+    while size(opt_coords, 2) < p + q
         dists = [mind(u) for u in 1 : data.nnodes]
         val, u = findmax(dists)
         opt_coords = hcat(opt_coords, data.D[:, u])
         lb = min(lb, val)
     end
-    lb
-end
-function compute_lower_bound(p)
-    sorted = collect(1 : data.nnodes)
-    lb = 0
-    nonsuccess = 0
-    while nonsuccess < 10
-        Random.shuffle!(sorted)
-        initcenters = data.D[:, sorted[1 : p]]
-        res = kmeans!(convert.(Float64, data.D), convert.(Float64, initcenters))
-        groups = [[u for u in 1 : data.nnodes if res.assignments[u] == k] for k in 1 : p]
-        centers = []
-        for k in 1 : p
-            minimax = 1e+20
-            argminmax = 0
-            for u in groups[k]
-                roundfn = params.wtype == :ceil ? ceil : round
-                dmax = roundfn(Int64, euclidean(data.D[:, u], initcenters[:, k]))#maximum([ceil(Int64, euclidean(D[:, u], D[:, v])) for v in groups[k]])
-                if dmax < minimax
-                    minimax = dmax
-                    argminmax = u
-                end
-            end
-            push!(centers, argminmax)
-        end
-        newlb = minimum([distance(u, v) for u in centers, v in centers if v > u])
-        if newlb > lb
-            lb = newlb
-            nonsuccess = 0
-        else nonsuccess += 1
-        end
-    end
-    lb
+    lb, opt_coords
 end
 
 function compute_easy_solution(E, p, oldopt)
@@ -284,4 +288,45 @@ end
 
 function get_number_groups()
 	return solver_status.endGroupsNb
+end
+
+function set_data(name, nnodes, D)
+    data = Data(name, nnodes, D)
+end
+
+function set_params(wtype, max_time)
+    params = Parameters(wtype, max_time)
+end
+
+function get_optimal_coordinates(opt)
+    D[:, opt]
+end
+
+function reset()
+    params = Parameters(:round, 21600)
+    data = Data("", 0, [])
+    solver_status = SolverStatus(Dates.now(), Dates.now(), true, :none, 0)
+end
+
+function set_initial_Q(coords)
+    data.Q = coords
+    q = size(coords, 2)
+    dQ = -1
+    for i in 1 : q - 1, j in i + 1 : q
+        euc = euclidean(coords[:, i], coords[:, j])
+        if dQ < 0
+            if params.wtype == :ceil
+                dQ = ceil(Int64, euc)
+            else dQ = round(Int64, euc)
+            end
+        elseif params.wtype == :ceil
+            dQ = min(dQ, ceil(Int64, euc))
+        else dQ = min(dQ, round(Int64, euc))
+        end
+    end
+    data.dQ = dQ
+end
+
+function get_random_coordinates(q)
+    D[:, rand(1 : data.nnodes, q)]
 end

@@ -9,6 +9,8 @@ mutable struct Data
     name
     nnodes
     D
+    Q
+    dQ
 end
 
 mutable struct SolverStatus
@@ -20,5 +22,5 @@ mutable struct SolverStatus
 end
 
 params = Parameters(:round, 21600)
-data = Data("", 0, [])
+data = Data("", 0, zeros(2, 0), zeros(2, 0), typemax(Int64))
 solver_status = SolverStatus(Dates.now(), Dates.now(), true, :none, 0)
