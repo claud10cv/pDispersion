@@ -290,6 +290,10 @@ function get_number_groups()
 	return solver_status.endGroupsNb
 end
 
+function get_nnodes()
+    data.nnodes
+end
+
 function set_data(name, nnodes, D)
     data = Data(name, nnodes, D)
 end
@@ -298,8 +302,8 @@ function set_params(wtype, max_time)
     params = Parameters(wtype, max_time)
 end
 
-function get_optimal_coordinates(opt)
-    D[:, opt]
+function get_coordinates(opt)
+    data.D[:, opt]
 end
 
 function reset()
@@ -328,5 +332,5 @@ function set_initial_Q(coords)
 end
 
 function get_random_coordinates(q)
-    D[:, rand(1 : data.nnodes, q)]
+    data.D[:, rand(1 : data.nnodes, q)]
 end
