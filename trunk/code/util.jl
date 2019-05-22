@@ -3,33 +3,34 @@ using Gurobi
 using JuMP
 using Dates
 
-function distance(u, v = 0)
-    q = size(data.Q, 2)
-    m1 = m2 = m3 = m4 = typemax(Int64)
+function rounding(T, w)
     if params.wtype == :ceil
-        if v > 0
-            m1 = ceil(Int64, euclidean(data.D[:, u], data.D[:, v]))
-        end
-        if q > 0
-            m2 = data.dQ
-            m3 = minimum([ceil(Int64, euclidean(data.D[:, u], data.Q[:, w])) for w in 1 : q])
-            if v > 0
-                m4 = minimum([ceil(Int64, euclidean(data.D[:, v], data.Q[:, w])) for w in 1 : q])
-            end
-        end
-    else
-        if v > 0
-            m1 = round(Int64, euclidean(data.D[:, u], data.D[:, v]))
-        end
-        if q > 0
-            m2 = data.dQ
-            m3 = minimum([round(Int64, euclidean(data.D[:, u], data.Q[:, w])) for w in 1 : q])
-            if v > 0
-                m4 = minimum([round(Int64, euclidean(data.D[:, v], data.Q[:, w])) for w in 1 : q])
-            end
-        end
+        return ceil(T, w)
+    else return round(T, w)
+    end
+end
+
+function distance(u::T where T<:Integer, v::T where T<:Integer)
+    q = size(data.Q, 2)
+    m2 = m3 = m4 = typemax(Int64)
+    m1 = rounding(Int64, euclidean(data.D[:, u], data.D[:, v]))
+    if q > 0
+        m2 = data.dQ
+        m3 = minimum([rounding(Int64, euclidean(data.D[:, u], data.Q[:, w])) for w in 1 : q])
+        m4 = minimum([rounding(Int64, euclidean(data.D[:, u], data.Q[:, w])) for w in 1 : q])
+        # println("m2 = $m2, m3 = $m3, m4 = $m4")
     end
     return minimum([m1, m2, m3, m4])
+end
+
+function distance(u::T where T<:Integer)
+    q = size(data.Q, 2)
+    if q > 0
+        m1 = data.dQ
+        m2 = minimum([rounding(Int64, euclidean(data.D[:, u], data.Q[:, w])) for w in 1 : q])
+        return min(m1, m2)
+    else return typemax(Int64)
+    end
 end
 
 function build_full_matrix()
@@ -41,6 +42,7 @@ function build_full_matrix()
 end
 
 function clean_data_points()
+    println("Cleaning repeated data points")
     init_data_points = data.nnodes
     E = [(data.D[1, u], data.D[2, u]) for u in 1 : data.nnodes]
     sort!(E)
@@ -52,10 +54,11 @@ function clean_data_points()
         data.D[2, u] = E[u][2]
     end
     end_data_points = data.nnodes
-    println("removed $(init_data_points - end_data_points) points from the data")
+    println("removed $(init_data_points - end_data_points) points from the data containing $init_data_points points")
 end
 
 function reduce_data_using_Q(lb)
+    println("reducing data using Q")
     init_data_points = data.nnodes
     E = [(data.D[1, u], data.D[2, u]) for u in 1 : data.nnodes if distance(u) >= lb]
     sort!(E)
@@ -142,35 +145,30 @@ function build_initial_groups(p)
 end
 
 function compute_lower_bound(p)
-    function d0(u)
-        if params.wtype == :ceil
-            ceil(Int64, euclidean(data.D[:, u], [0, 0]))
-        else
-            round(Int64, euclidean(data.D[:, u], [0, 0]))
-        end
-    end
     q = size(data.Q, 2)
-    opt_coords = copy(data.Q)#zeros(2, 0)
-    let
-        dists = [d0(u) for u in 1 : data.nnodes]
+    println("computing lower bound with p $p and q = $q")
+    opt_coords = copy(data.Q)
+    nopt = size(opt_coords, 2)
+    if nopt <= 0
+        dists = [rounding(Int64, euclidean(data.D[:, u], [0, 0])) for u in 1 : data.nnodes]
         val, u = findmax(dists)
         opt_coords = hcat(opt_coords, data.D[:, u])
-    end
-    function d(u, v)
-        if params.wtype == :ceil
-            ceil(Int64, euclidean(data.D[:, u], opt_coords[:, v]))
-        else
-            round(Int64, euclidean(data.D[:, u], opt_coords[:, v]))
-        end
+        nopt += 1
     end
     function mind(u)
-        minimum([d(u, v) for v in 1 : size(opt_coords, 2)])
+        minimum([rounding(Int64, euclidean(data.D[:, u], opt_coords[:, v])) for v in 1 : nopt])
     end
-    lb = data.dQ#typemax(Int64)
-    while size(opt_coords, 2) < p + q
+    if q > 0
+        lb = data.dQ
+    else lb = typemax(Int64)
+    end
+    while nopt < p + q
         dists = [mind(u) for u in 1 : data.nnodes]
+        # println("dists = $dists")
         val, u = findmax(dists)
+        # println("val = $val")
         opt_coords = hcat(opt_coords, data.D[:, u])
+        nopt += 1
         lb = min(lb, val)
     end
     lb, opt_coords

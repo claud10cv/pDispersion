@@ -23,8 +23,9 @@ end
 function pdispersion_decremental_clustering(p)
     clean_data_points()
     init_solver_status()
+    println("computing lower bound")
     lb, nothing = compute_lower_bound(p)
-    # println("lower bound = $lb")
+    println("lower bound = $lb")
     dim, nnodes = size(data.D)
     E, groups = build_initial_groups(p)
     while maximum([E[i, i] for i in eachindex(groups)]) >= lb
@@ -39,10 +40,7 @@ function pdispersion_decremental_clustering(p)
         end
         if val < ub
             lb, ub, opt = binarysearch(E, p, ub)
-        # else
-            # println("found a solution by simple inspection!")
         end
-        # println("solution with $(length(groups)) groups of value $ub")
         if !solver_status.ok
             break
         end
@@ -52,10 +50,12 @@ function pdispersion_decremental_clustering(p)
         else
             break
         end
+        # println("val = $val")
     end
     solver_status.endTime = Dates.now()
     opt = [groups[u][1] for u in opt]
     solver_status.endStatus = solver_status.ok ? :optimal : :tilim
     solver_status.endGroupsNb = length(groups)
+    println("optimal solution of $ub")
     ub, opt, groups
 end
