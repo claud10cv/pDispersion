@@ -5,12 +5,17 @@ mutable struct Parameters
     max_time
 end
 
+mutable struct QData
+    Q
+    dQ
+    dToQ
+end
+
 mutable struct Data
     name
     nnodes
     D
-    Q
-    dQ
+    qdata::QData
 end
 
 mutable struct SolverStatus
@@ -22,5 +27,5 @@ mutable struct SolverStatus
 end
 
 params = Parameters(:round, 21600)
-data = Data("", 0, zeros(2, 0), zeros(2, 0), typemax(Int64))
+data = Data("", 0, zeros(2, 0), QData(zeros(2, 0), typemax(Int64), []))
 solver_status = SolverStatus(Dates.now(), Dates.now(), true, :none, 0)

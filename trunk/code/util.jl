@@ -11,23 +11,23 @@ function rounding(T, w)
 end
 
 function distance(u::T where T<:Integer, v::T where T<:Integer)
-    q = size(data.Q, 2)
-    m2 = m3 = m4 = typemax(Int64)
+    q = size(data.qdata.Q, 2)
     m1 = rounding(Int64, euclidean(data.D[:, u], data.D[:, v]))
     if q > 0
-        m2 = data.dQ
-        m3 = minimum([rounding(Int64, euclidean(data.D[:, u], data.Q[:, w])) for w in 1 : q])
-        m4 = minimum([rounding(Int64, euclidean(data.D[:, u], data.Q[:, w])) for w in 1 : q])
-        # println("m2 = $m2, m3 = $m3, m4 = $m4")
+        m2 = data.qdata.dQ
+        m3 = data.qdata.dToQ[u]#minimum([rounding(Int64, euclidean(data.D[:, u], data.Q[:, w])) for w in 1 : q])
+        m4 = data.qdata.dToQ[v]#minimum([rounding(Int64, euclidean(data.D[:, u], data.Q[:, w])) for w in 1 : q])
+        return minimum([m1, m2, m3, m4])
+    else
+        return m1
     end
-    return minimum([m1, m2, m3, m4])
 end
 
 function distance(u::T where T<:Integer)
-    q = size(data.Q, 2)
+    q = size(data.qdata.Q, 2)
     if q > 0
-        m1 = data.dQ
-        m2 = minimum([rounding(Int64, euclidean(data.D[:, u], data.Q[:, w])) for w in 1 : q])
+        m1 = data.qdata.dQ
+        m2 = data.qdata.dToQ[u]
         return min(m1, m2)
     else return typemax(Int64)
     end
@@ -44,14 +44,24 @@ end
 function clean_data_points()
     println("Cleaning repeated data points")
     init_data_points = data.nnodes
-    E = [(data.D[1, u], data.D[2, u]) for u in 1 : data.nnodes]
+    if size(data.qdata.Q, 2) > 0
+        E = [(data.D[1, u], data.D[2, u], data.qdata.dToQ[u]) for u in 1 : data.nnodes]
+    else
+        E = [(data.D[1, u], data.D[2, u]) for u in 1 : data.nnodes]
+    end
     sort!(E)
     unique!(E)
     data.nnodes = length(E)
     data.D = zeros(Float64, 2, data.nnodes)
+    if size(data.qdata.Q, 2) > 0
+        data.qdata.dToQ = zeros(Int64, data.nnodes)
+    end
     for u in 1 : data.nnodes
         data.D[1, u] = E[u][1]
         data.D[2, u] = E[u][2]
+        if size(data.qdata.Q, 2) > 0
+            data.qdata.dToQ[u] = E[u][3]
+        end
     end
     end_data_points = data.nnodes
     println("removed $(init_data_points - end_data_points) points from the data containing $init_data_points points")
@@ -60,14 +70,24 @@ end
 function reduce_data_using_Q(lb)
     println("reducing data using Q")
     init_data_points = data.nnodes
-    E = [(data.D[1, u], data.D[2, u]) for u in 1 : data.nnodes if distance(u) >= lb]
+    if size(data.qdata.Q, 2) > 0
+        E = [(data.D[1, u], data.D[2, u], data.qdata.dToQ[u]) for u in 1 : data.nnodes if distance(u) >= lb]
+    else
+        E = [(data.D[1, u], data.D[2, u]) for u in 1 : data.nnodes if distance(u) >= lb]
+    end
     sort!(E)
     unique!(E)
     data.nnodes = length(E)
     data.D = zeros(Float64, 2, data.nnodes)
+    if size(data.qdata.Q, 2) > 0
+        data.qdata.dToQ = zeros(Int64, data.nnodes)
+    end
     for u in 1 : data.nnodes
         data.D[1, u] = E[u][1]
         data.D[2, u] = E[u][2]
+        if size(data.qdata.Q, 2) > 0
+            data.qdata.dToQ[u] = E[u][3]
+        end
     end
     end_data_points = data.nnodes
     println("removed $(init_data_points - end_data_points) points from the data")
@@ -145,9 +165,9 @@ function build_initial_groups(p)
 end
 
 function compute_lower_bound(p)
-    q = size(data.Q, 2)
+    q = size(data.qdata.Q, 2)
     println("computing lower bound with p $p and q = $q")
-    opt_coords = copy(data.Q)
+    opt_coords = copy(data.qdata.Q)
     nopt = size(opt_coords, 2)
     if nopt <= 0
         dists = [rounding(Int64, euclidean(data.D[:, u], [0, 0])) for u in 1 : data.nnodes]
@@ -159,7 +179,7 @@ function compute_lower_bound(p)
         minimum([rounding(Int64, euclidean(data.D[:, u], opt_coords[:, v])) for v in 1 : nopt])
     end
     if q > 0
-        lb = data.dQ
+        lb = data.qdata.dQ
     else lb = typemax(Int64)
     end
     while nopt < p + q
@@ -311,7 +331,7 @@ function reset()
 end
 
 function set_initial_Q(coords)
-    data.Q = coords
+    data.qdata.Q = coords
     q = size(coords, 2)
     dQ = -1
     for i in 1 : q - 1, j in i + 1 : q
@@ -326,7 +346,11 @@ function set_initial_Q(coords)
         else dQ = min(dQ, round(Int64, euc))
         end
     end
-    data.dQ = dQ
+    data.qdata.dQ = dQ
+    data.qdata.dToQ = zeros(Int64, data.nnodes)
+    for u in 1 : data.nnodes
+        data.qdata.dToQ[u] = minimum([rounding(Int64, euclidean(data.D[:, u], coords[:, v])) for v in 1 : q])
+    end
 end
 
 function get_random_coordinates(q)
