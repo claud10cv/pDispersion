@@ -11,11 +11,21 @@ mutable struct QData
     dToQ
 end
 
+mutable struct QPData
+    Q
+    inQ
+end
+
 mutable struct Data
     name
     nnodes
     D
     qdata::QData
+    qpdata::QPData
+end
+
+mutable struct OrlibData
+    dmat
 end
 
 mutable struct SolverStatus
@@ -27,5 +37,6 @@ mutable struct SolverStatus
 end
 
 params = Parameters(:round, 21600)
-data = Data("", 0, zeros(2, 0), QData(zeros(2, 0), typemax(Int64), []))
+data = Data("", 0, zeros(2, 0), QData(zeros(2, 0), typemax(Int64), []), QPData(zeros(2, 0), []))
 solver_status = SolverStatus(Dates.now(), Dates.now(), true, :none, 0)
+orlibdata = OrlibData(zeros(0, 0))

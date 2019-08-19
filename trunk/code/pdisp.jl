@@ -10,6 +10,7 @@ function pdisp(D, p, lb, ub)
     Dlist = [[] for i in 1 : dmax + 1]
     unfeas = []
     adj_unfeas = trues(nnodes, nnodes)
+    nqp = size(data.qpdata.Q, 2)
     for i in 1 : nnodes - 1, j in i + 1 : nnodes
         if D[i, j] >= lb && D[i, j] <= ub
             push!(Dlist[D[i, j] + 1], (i, j))
@@ -39,6 +40,9 @@ function pdisp(D, p, lb, ub)
     @variable(m, z[1 : ndists], Bin)
     @objective(m, Max, dmap[1] * z[1] + sum((dmap[k] - dmap[k - 1]) * z[k] for k in 2 : ndists))
     @constraint(m, sum(x) == p)
+    if nqp > 0
+        @constraint(m, sum(x[i] for i in 1 : nqp) == nqp)
+    end
     @constraint(m, monot[k in 2 : ndists], z[k] - z[k - 1] <= 0)
     @constraint(m, [k in 2 : ndists, (i, j) in Dlist[dmap[k - 1] + 1]], x[i] + x[j] + z[k] <= 2)
     @constraint(m, [i in 1 : nunfeas], x[unfeas[i][1]] + x[unfeas[i][2]] <= 1)

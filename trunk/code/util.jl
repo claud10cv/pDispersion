@@ -12,7 +12,11 @@ end
 
 function distance(u::T where T<:Integer, v::T where T<:Integer)
     q = size(data.qdata.Q, 2)
-    m1 = rounding(Int64, euclidean(data.D[:, u], data.D[:, v]))
+    if params.wtype == :orlib
+        m1 = orlibdata.dmat[u, v]
+    else
+        m1 = rounding(Int64, new_euclidean(data.D[:, u], data.D[:, v]))
+    end
     if q > 0
         m2 = data.qdata.dQ
         m3 = data.qdata.dToQ[u]#minimum([rounding(Int64, euclidean(data.D[:, u], data.Q[:, w])) for w in 1 : q])
@@ -61,6 +65,18 @@ function clean_data_points()
         data.D[2, u] = E[u][2]
         if size(data.qdata.Q, 2) > 0
             data.qdata.dToQ[u] = E[u][3]
+        end
+    end
+    if size(data.qpdata.Q, 2) > 0
+        q = size(data.qpdata.Q, 2)
+        data.qpdata.inQ = falses(data.nnodes)
+        for u in 1 : data.nnodes
+            for i in 1 : q
+                if data.qpdata.Q[:, i] == data.D[:, u]
+                    data.qpdata.inQ[u] = true
+                    break
+                end
+            end
         end
     end
     end_data_points = data.nnodes
@@ -141,13 +157,21 @@ function maximum_weighted_clique(nnodes, adj, weights)
 end
 
 function build_initial_groups(p)
+    nq = size(data.qpdata.Q, 2)
     E = zeros(Int64, p, p)
-    res = kmeans(convert.(Float64, data.D), p)
+    res = kmeans(convert.(Float64, data.D), p - nq)
     groups = [[] for i in 1 : p]
+    currq = 0
     for u in 1 : data.nnodes
-        k = res.assignments[u]
-        push!(groups[k], u)
+        if nq > 0 && data.qpdata.inQ[u]
+            currq += 1
+            push!(groups[currq], u)
+        else
+            k = res.assignments[u] + nq
+            push!(groups[k], u)
+        end
     end
+    println("nq = $nq")
     for k in 1 : p
         for u in groups[k]
             du = maximum([distance(u, v) for v in groups[k] if v >= u])
@@ -170,13 +194,13 @@ function compute_lower_bound(p)
     opt_coords = copy(data.qdata.Q)
     nopt = size(opt_coords, 2)
     if nopt <= 0
-        dists = [rounding(Int64, euclidean(data.D[:, u], [0, 0])) for u in 1 : data.nnodes]
+        dists = params.wtype == :orlib ? [maximum(orlibdata.dmat[u, :]) for u in 1 : data.nnodes] : [rounding(Int64, new_euclidean(data.D[:, u], [0, 0])) for u in 1 : data.nnodes]
         val, u = findmax(dists)
         opt_coords = hcat(opt_coords, data.D[:, u])
         nopt += 1
     end
     function mind(u)
-        minimum([rounding(Int64, euclidean(data.D[:, u], opt_coords[:, v])) for v in 1 : nopt])
+        minimum([rounding(Int64, new_euclidean(data.D[:, u], opt_coords[:, v])) for v in 1 : nopt])
     end
     if q > 0
         lb = data.qdata.dQ
@@ -335,7 +359,7 @@ function set_initial_Q(coords)
     q = size(coords, 2)
     dQ = -1
     for i in 1 : q - 1, j in i + 1 : q
-        euc = euclidean(coords[:, i], coords[:, j])
+        euc = new_euclidean(coords[:, i], coords[:, j])
         if dQ < 0
             if params.wtype == :ceil
                 dQ = ceil(Int64, euc)
@@ -349,10 +373,35 @@ function set_initial_Q(coords)
     data.qdata.dQ = dQ
     data.qdata.dToQ = zeros(Int64, data.nnodes)
     for u in 1 : data.nnodes
-        data.qdata.dToQ[u] = minimum([rounding(Int64, euclidean(data.D[:, u], coords[:, v])) for v in 1 : q])
+        data.qdata.dToQ[u] = minimum([rounding(Int64, new_euclidean(data.D[:, u], coords[:, v])) for v in 1 : q])
     end
+end
+
+function set_initial_Qp(coords)
+    q = size(coords, 2)
+    data.qpdata.Q = coords
+    data.qpdata.inQ = falses(data.nnodes)
+    nfix = 0
+    for i in 1 : q
+        for u in 1 : data.nnodes
+            if coords[:, i] == data.D[:, u]
+                data.qpdata.inQ[u] = true
+                nfix += 1
+                break
+            end
+        end
+    end
+    println("successfully fixed $nfix nodes")
 end
 
 function get_random_coordinates(q)
     data.D[:, rand(1 : data.nnodes, q)]
+end
+
+function new_euclidean(U, V)
+    if params.wtype == :orlib
+        return orlibdata.dmat[round(Int64, U[1]), round(Int64, V[1])]
+    else
+        return euclidean(U, V)
+    end
 end

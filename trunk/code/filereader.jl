@@ -32,3 +32,36 @@ function read_instance_tsplib(filename)
     end
     println("instance file $filename parsed successfully")
 end
+
+function read_instance_orlib(filename)
+    params.wtype = :orlib
+    data.name = filename
+    data.nnodes = 0
+    f = open(filename, "r")
+    nedges = p = 0
+    let
+        sline = split(readline(f))
+        data.nnodes = parse(Int64, sline[1])
+        data.D = zeros(Int64, 2, data.nnodes)
+        orlibdata.dmat = 10000000 * ones(Int64, data.nnodes, data.nnodes)
+        nedges = parse(Int64, sline[2])
+        p = parse(Int64, sline[3])
+        for u in 1 : data.nnodes
+            data.D[1, u] = data.D[2, u] = u
+            orlibdata.dmat[u, u] = 0
+        end
+    end
+    for e in 1 : nedges
+        sline = split(readline(f))
+        u = parse(Int64, sline[1])
+        v = parse(Int64, sline[2])
+        c = parse(Int64, sline[3])
+        orlibdata.dmat[u, v] = orlibdata.dmat[v, u] = c
+    end
+    close(f)
+    for k in 1 : data.nnodes, i in 1 : data.nnodes, j in 1 : data.nnodes
+        orlibdata.dmat[i, j] = min(orlibdata.dmat[i, j], orlibdata.dmat[i, k] + orlibdata.dmat[k, j])
+    end
+    println("instance file $filename parsed successfully")
+    p
+end
