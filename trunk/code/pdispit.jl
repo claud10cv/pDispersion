@@ -24,7 +24,8 @@ function pdispersion_decremental_clustering(p)
     clean_data_points()
     init_solver_status()
     println("computing lower bound")
-    lb, nothing = compute_lower_bound(p)
+    lb, bks = compute_lower_bound(p)
+	println("bks = $bks")
     println("lower bound = $lb")
     dim, nnodes = size(data.D)
     E, groups = build_initial_groups(p)
@@ -32,14 +33,32 @@ function pdispersion_decremental_clustering(p)
         groups, E = split_groups_and_build_matrix(groups, E; use_diagonal = true)
     end
     ub = maximum(E)
+	if !isempty(data.qdata.Q)
+		ub = data.qdata.dQ
+	end
     opt = []
-    while true
+   if lb >= ub
+	nothing, nbks = size(bks)
+	for i in 1 : nbks
+		for u in 1 : data.nnodes
+			if data.D[:, u] == bks[:, i]
+				push!(opt, u)
+				break
+			end
+		end
+	end	
+	solver_status.endTime = Dates.now()
+	solver_status.endStatus = :optimal
+	solver_status.endGroupsNb = data.nnodes
+	return lb, opt, [[u] for u in 1 : data.nnodes]
+   end
+   while lb < ub
         val = 0
         if !isempty(opt)
             opt, val = compute_easy_solution(E, p, opt)
         end
         if val < ub
-            lb, ub, opt = binarysearch(E, p, ub)
+            rlb, ub, opt = binarysearch(E, p, ub)
         end
         if !solver_status.ok
             break
