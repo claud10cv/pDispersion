@@ -189,9 +189,10 @@ function build_initial_groups(p)
 end
 
 function compute_lower_bound(p)
-    q = size(data.qdata.Q, 2)
+    fixed = size(data.qpdata.Q, 2) > 0
+    q = fixed ? size(data.qpdata.Q, 2) : size(data.qpdata.Q, 2)
     println("computing lower bound with p $p and q = $q")
-    opt_coords = copy(data.qdata.Q)
+    opt_coords = fixed ? copy(data.qpdata.Q) : copy(data.qdata.Q)
     nopt = size(opt_coords, 2)
     if nopt <= 0
         dists = params.wtype == :orlib ? [maximum(orlibdata.dmat[u, :]) for u in 1 : data.nnodes] : [rounding(Int64, new_euclidean(data.D[:, u], [0, 0])) for u in 1 : data.nnodes]
@@ -206,7 +207,8 @@ function compute_lower_bound(p)
         lb = data.qdata.dQ
     else lb = typemax(Int64)
     end
-    while nopt < p + q
+    maxsize = fixed ? p : p + q
+    while nopt < maxsize
         dists = [mind(u) for u in 1 : data.nnodes]
         # println("dists = $dists")
         val, u = findmax(dists)
@@ -219,6 +221,7 @@ function compute_lower_bound(p)
 end
 
 function compute_easy_solution(E, p, oldopt)
+    nqp = size(data.qpdata.Q, 2)
     ngroups = size(E, 1)
     opt = copy(oldopt)
     push!(opt, ngroups)
@@ -228,11 +231,13 @@ function compute_easy_solution(E, p, oldopt)
         val = 0
         newopt = []
         for u in opt
-            sol = [v for v in opt if v != u]
-            dmin = minimum(E[u, v] for u in sol, v in sol if v > u)
-            if dmin > val
-                val = dmin
-                newopt = sol
+            if u > nqp
+                sol = [v for v in opt if v != u]
+                dmin = minimum(E[u, v] for u in sol, v in sol if v > u)
+                if dmin > val
+                    val = dmin
+                    newopt = sol
+                end
             end
         end
         return newopt, val
