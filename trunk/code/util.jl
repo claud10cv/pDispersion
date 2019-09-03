@@ -83,6 +83,22 @@ function clean_data_points()
     println("removed $(init_data_points - end_data_points) points from the data containing $init_data_points points")
 end
 
+function compute_heuristic_lower_bound(g)
+    println("computing heuristic lb")
+    opt, lb = [], 0
+    unsuccessful = 0
+    while unsuccessful < 10
+        sol = [rand(q) for q in g]
+        val = minimum([distance(u, v) for u in sol, v in sol if u != v])
+        if val > lb
+            opt, lb = sol, val
+            unsuccessful = 0
+        else unsuccessful += 1
+        end
+    end
+    opt, lb
+end
+
 function reduce_data_using_Q(lb)
     println("reducing data using Q")
     init_data_points = data.nnodes

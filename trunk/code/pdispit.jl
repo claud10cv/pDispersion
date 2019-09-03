@@ -46,7 +46,7 @@ function pdispersion_decremental_clustering(p)
 				break
 			end
 		end
-	end	
+	end
 	solver_status.endTime = Dates.now()
 	solver_status.endStatus = :optimal
 	solver_status.endGroupsNb = data.nnodes
@@ -72,9 +72,11 @@ function pdispersion_decremental_clustering(p)
         # println("val = $val")
     end
     solver_status.endTime = Dates.now()
-    opt = [groups[u][1] for u in opt]
+    sol, lb = compute_heuristic_lower_bound([groups[u] for u in opt])
+    # opt = [groups[u][1] for u in opt]
+    avgSize = round(Int64, sum(length(groups[u]) for u in opt) * 100 / p) / 100
     solver_status.endStatus = solver_status.ok ? :optimal : :tilim
     solver_status.endGroupsNb = length(groups)
-    println("optimal solution of $ub")
-    ub, opt, groups
+    println("upper bound of $ub")
+    lb, ub, sol, groups, avgSize
 end
