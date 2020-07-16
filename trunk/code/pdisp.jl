@@ -49,7 +49,12 @@ function pdisp(D, p, lb, ub)
         @constraint(m, sum(x[i] for i in 1 : nqp) == nqp)
     end
     @constraint(m, monot[k in 2 : ndists], z[k] - z[k - 1] <= 0)
-    @constraint(m, [k in 2 : ndists, (i, j) in Dlist[dmap[k - 1] + 1]], x[i] + x[j] + z[k] <= 2)
+    for k in 2 : ndists
+        ijvals = [p for p in Dlist[dmap[k - 1] + 1]]
+        if !isempty(ijvals)
+            @constraint(m, [p in ijvals], x[p[1]] + x[p[2]] + z[k] <= 2)
+        end
+    end
     @constraint(m, [i in 1 : nunfeas], x[unfeas[i][1]] + x[unfeas[i][2]] <= 1)
 
     function lazycb(cb)
