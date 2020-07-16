@@ -2,7 +2,9 @@ using Gurobi
 using JuMP
 using Random
 using Distances
-using MathProgBase
+using MathOptInterface
+
+const MOI = MathOptInterface
 
 function pdisp(D, p, lb, ub)
     nnodes = size(D, 1)
@@ -32,10 +34,13 @@ function pdisp(D, p, lb, ub)
     end
     nunfeas = length(unfeas)
     maxtime = max(1, params.max_time - elapsed())
-    m = Model(solver = GurobiSolver(OutputFlag = 0,
-                                    Threads = 1,
-                                    MIPFocus = 1,
-                                    TimeLimit = maxtime + 1))
+    m = Model(optimizer_with_attributes(Gurobi.Optimizer, "OutputFlag" => 0,
+                                    "Threads" => 1,
+                                    "MIPFocus" => 1,
+                                    "TimeLimit" => maxtime + 1,
+                                    "SolutionLimit" => 1
+                                    )
+                )
     @variable(m, x[1 : nnodes], Bin)
     @variable(m, z[1 : ndists], Bin)
     @objective(m, Max, dmap[1] * z[1] + sum((dmap[k] - dmap[k - 1]) * z[k] for k in 2 : ndists))
@@ -48,11 +53,8 @@ function pdisp(D, p, lb, ub)
     @constraint(m, [i in 1 : nunfeas], x[unfeas[i][1]] + x[unfeas[i][2]] <= 1)
 
     function lazycb(cb)
-        cbnodes = MathProgBase.cbgetexplorednodes(cb)
-        if cbnodes >= 100 return
-        end
-        xvals = getvalue(x)
-        zvals = getvalue(z)
+        xvals = [callback_value(cb, xvar) for xvar in x]
+        zvals = [callback_value(cb, zvar) for zvar in z]
         if sum(abs.(xvals - round.(Int64, xvals))) > 1e-5 && sum(abs.(zvals[2 : ndists] - round.(Int64, zvals[2 : ndists]))) > 1e-5
             return
         end
@@ -60,7 +62,8 @@ function pdisp(D, p, lb, ub)
             sol = maximum_weighted_clique(nnodes, adj_unfeas, xvals)
             if sum(xvals[u] for u in sol) > 1.1
                 # println("adding clique inequality of type I")
-                @lazyconstraint(cb, sum(x[u] for u in sol) <= 1)
+                con = @build_constraint(sum(x[u] for u in sol) <= 1)
+                MOI.submit(m, MOI.LazyConstraint(cb), con)
                 return
             end
         end
@@ -71,25 +74,22 @@ function pdisp(D, p, lb, ub)
             nsol = length(sol)
             if nsol > 0 && sum(xvals[u] for u in sol) + (nsol - 1) * zvals[k] > nsol + 1e-1
                 # println("adding clique inequality of type II")
-                @lazyconstraint(cb, sum(x[u] for u in sol) + (nsol - 1) * z[k] <= nsol)
+                con = @build_constraint(sum(x[u] for u in sol) + (nsol - 1) * z[k] <= nsol)
+                MOI.submit(m, MOI.LazyConstraint(cb), con)
+                # @lazyconstraint(cb, sum(x[u] for u in sol) + (nsol - 1) * z[k] <= nsol)
             end
         end
     end
 
-    feas = []
-    function infocb(cb)
-        xvals = round.(Int64, getvalue(x))
-        sol = [i for i in 1 : nnodes if xvals[i] > 0]
-        push!(feas, sol)
-        throw(CallbackAbort())
-    end
+    MOI.set(m, MOI.LazyConstraintCallback(), lazycb)
+    # addlazycallback(m, lazycb; fractional = true)
+    # addinfocallback(m, infocb, when = :MIPSol)
 
-    addlazycallback(m, lazycb; fractional = true)
-    addinfocallback(m, infocb, when = :MIPSol)
-
-    status = solve(m)
-    if !isempty(feas)
-        sol = feas[1]
+    optimize!(m)
+    status = termination_status(m)
+    if status == MOI.OPTIMAL || status == MOI.SOLUTION_LIMIT
+        xval = value.(x)
+        sol = [i for i in 1 : nnodes if xval[i] > 1e-7]
         optval = minimum([D[i, j] for i in sol, j in sol if j > i])
         return sol, optval
     else return [], 0

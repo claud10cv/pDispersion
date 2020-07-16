@@ -206,8 +206,8 @@ end
 
 function compute_lower_bound(p)
     fixed = size(data.qpdata.Q, 2) > 0
-    q = fixed ? size(data.qpdata.Q, 2) : size(data.qpdata.Q, 2)
-    println("computing lower bound with p $p and q = $q")
+    q = fixed ? size(data.qpdata.Q, 2) : size(data.qdata.Q, 2)
+    println("computing lower bound with p = $p and q = $q")
     opt_coords = fixed ? copy(data.qpdata.Q) : copy(data.qdata.Q)
     nopt = size(opt_coords, 2)
     if nopt <= 0
@@ -233,6 +233,7 @@ function compute_lower_bound(p)
         nopt += 1
         lb = min(lb, val)
     end
+    println("lower bound = $lb")
     lb, opt_coords
 end
 

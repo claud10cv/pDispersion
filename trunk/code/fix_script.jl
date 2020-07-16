@@ -11,7 +11,7 @@ PDispersion.read_instance_tsplib("../instances/$(ARGS[1]).tsp")
 PDispersion.set_initial_Qp(Q)
 PDispersion.set_maximum_time(86400)
 init_time = time_ns()
-lb, opt, groups = PDispersion.pdispersion_decremental_clustering(p + q)
+lb, ub, opt, groups, avgs = PDispersion.pdispersion_decremental_clustering(p + q)
 elapsed = round(Int64, (time_ns() - init_time) * 1e-8) * 1e-1
 println(out, "BestBound $lb")
 println(out, "Elapsed $elapsed")

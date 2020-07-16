@@ -3,7 +3,8 @@ include("$(pwd())/PDispersion.jl")
 p = parse(Int64, ARGS[2])
 q = parse(Int64, ARGS[3])
 policy = ARGS[4]
-outfile = "../runs/cc2019/$(ARGS[1])_$(p)_$(q)_$policy.log"
+reduce = ARGS[5]
+outfile = "../runs/cc2019/$(ARGS[1])_$(p)_$(q)_$(policy)_$(reduce).log"
 out = open(outfile, "w")
 
 PDispersion.read_instance_tsplib("../instances/$(ARGS[1]).tsp")
@@ -24,11 +25,13 @@ end
 PDispersion.set_initial_Q(Q)
 lb0, nothing = PDispersion.compute_lower_bound(p)
 init_nnodes = PDispersion.get_nnodes()
-PDispersion.reduce_data_using_Q(lb0)
+if reduce == "y"
+    PDispersion.reduce_data_using_Q(lb0)
+end
 final_nnodes = PDispersion.get_nnodes()
 PDispersion.set_maximum_time(86400)
 init_time = time_ns()
-lb, opt, groups = PDispersion.pdispersion_decremental_clustering(p)
+lb, ub, opt, groups, avgSize = PDispersion.pdispersion_decremental_clustering(p)
 elapsed = round(Int64, (time_ns() - init_time) * 1e-8) * 1e-1
 println(out, "BestBound $lb")
 println(out, "Elapsed $elapsed")
